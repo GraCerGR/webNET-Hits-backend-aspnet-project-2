@@ -39,10 +39,12 @@ namespace Test.Controllers
         }
 
         private readonly TestContext _context;
+        private readonly TestContext _regContext;
 
-        public TestController(TestContext context)
+        public TestController(TestContext context, TestContext regContext)
         {
             _context = context;
+            _regContext = regContext;
         }
 
 
@@ -68,6 +70,24 @@ namespace Test.Controllers
 
                 // Сохраняем изменения в базе данных
                 await _context.SaveChangesAsync();
+
+/*                UserRegisterModel userReg = new UserRegisterModel
+                {
+                    fullname = model.fullname,
+                    password = model.password,
+                    email = model.email,
+                    birthDate = model.birthDate,
+                    gender = model.gender,
+                    phoneNumber = model.phoneNumber
+                };*/
+
+
+                // Добавляем пользователя в контекст базы данных UserRegisterContext
+                _regContext.UserRegisterModels.Add(model);
+
+                // Сохраняем изменения в базе данных UserRegisterContext
+                await _regContext.SaveChangesAsync();
+
 
 
                 // Генерация токена
@@ -97,29 +117,72 @@ namespace Test.Controllers
             }
         }
 
-/*        [HttpGet("name")]
-        public IActionResult Login(string name)
+
+        [HttpPost("login")]
+        public IActionResult Login(LoginCredentials model)
         {
+            // Проверяем наличие пользователя с указанным email в базе данных
+            var user = _regContext.UserRegisterModels.FirstOrDefault(u => u.email == model.email);
+            if (user == null)
+            {
+                // Если пользователя с указанным email не существует, возвращаем ошибку
+                return StatusCode(400, new { status = "error", message = "Неверный email или пароль." });
+            }
+
+            // Проверяем правильность введенного пароля
+            if (user.password != model.password)
+            {
+                // Если пароль неверный, возвращаем ошибку
+                return StatusCode(400, new { status = "error", message = "Неверный email или пароль." });
+            }
+
+            var userDto = _context.Users.FirstOrDefault(u => u.email == user.email);
+
+            // Генерируем токен для пользователя
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes("1234567890123456789012345678901234567890");
-
             var tokenDescriptor = new SecurityTokenDescriptor()
             {
                 NotBefore = DateTime.UtcNow,
                 Expires = DateTime.UtcNow.AddHours(1),
-                SigningCredentials =
-                new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
                 Issuer = "HITS",
                 Subject = new ClaimsIdentity(new Claim[]
-            {
-                new Claim(ClaimTypes.Name, name)
-            })
+                {
+            new Claim(ClaimTypes.Name, userDto.id) // Используем email пользователя в качестве имени в токене
+                })
             };
-
             var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
 
-            return Ok(tokenHandler.WriteToken(token));
-        }*/
+            // Возвращаем токен в случае успеха
+            return Ok(new { token = tokenString });
+        }
+
+
+        /*        [HttpGet("name")]
+                public IActionResult Login(string name)
+                {
+                    var tokenHandler = new JwtSecurityTokenHandler();
+                    var key = Encoding.UTF8.GetBytes("1234567890123456789012345678901234567890");
+
+                    var tokenDescriptor = new SecurityTokenDescriptor()
+                    {
+                        NotBefore = DateTime.UtcNow,
+                        Expires = DateTime.UtcNow.AddHours(1),
+                        SigningCredentials =
+                        new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+                        Issuer = "HITS",
+                        Subject = new ClaimsIdentity(new Claim[]
+                    {
+                        new Claim(ClaimTypes.Name, name)
+                    })
+                    };
+
+                    var token = tokenHandler.CreateToken(tokenDescriptor);
+
+                    return Ok(tokenHandler.WriteToken(token));
+                }*/
 
 
     }

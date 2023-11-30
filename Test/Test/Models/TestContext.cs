@@ -11,9 +11,19 @@ namespace Test.Models
         }
 
         public DbSet<UserDto> Users { get; set; }
+
+        public DbSet<UserRegisterModel> UserRegisterModels { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<UserDto>().HasKey(x => x.id);
+
+            modelBuilder.Entity<UserRegisterModel>().HasKey(x => x.fullname);
+
+            modelBuilder.Entity<UserRegisterModel>(options =>
+            {
+
+            });
 
             modelBuilder.Entity<UserDto>(options =>
             {
