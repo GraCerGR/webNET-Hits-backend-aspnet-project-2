@@ -1,7 +1,13 @@
 ﻿using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Test.Models;
+using Test.Services;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 
 namespace Test.Controllers
 {
@@ -9,6 +15,7 @@ namespace Test.Controllers
     [ApiController]
     public class TestController : ControllerBase
     {
+
         [HttpGet]
 
         public ActionResult<UserDto> Get()
@@ -38,6 +45,7 @@ namespace Test.Controllers
             _context = context;
         }
 
+
         [HttpPost]
         public async Task<ActionResult> Post(UserRegisterModel model)
         {
@@ -61,8 +69,26 @@ namespace Test.Controllers
                 // Сохраняем изменения в базе данных
                 await _context.SaveChangesAsync();
 
-                return Ok();
 
+                // Генерация токена
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.UTF8.GetBytes("1234567890123456789012345678901234567890");
+                var tokenDescriptor = new SecurityTokenDescriptor()
+                {
+                    NotBefore = DateTime.UtcNow,
+                    Expires = DateTime.UtcNow.AddHours(1),
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+                    Issuer = "HITS",
+                    Subject = new ClaimsIdentity(new Claim[]
+                    {
+                new Claim(ClaimTypes.Name, user.id) // Используем id пользователя в качестве имени в токене
+                    })
+                };
+                var token = tokenHandler.CreateToken(tokenDescriptor);
+                var tokenString = tokenHandler.WriteToken(token);
+
+                // Возвращение токена в качестве ответа
+                return Ok(tokenString);
             }
             catch (Exception ex)
             {
@@ -70,5 +96,31 @@ namespace Test.Controllers
                 return StatusCode(500, "Произошла ошибка при добавлении пользователя.");
             }
         }
+
+/*        [HttpGet("name")]
+        public IActionResult Login(string name)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes("1234567890123456789012345678901234567890");
+
+            var tokenDescriptor = new SecurityTokenDescriptor()
+            {
+                NotBefore = DateTime.UtcNow,
+                Expires = DateTime.UtcNow.AddHours(1),
+                SigningCredentials =
+                new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+                Issuer = "HITS",
+                Subject = new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, name)
+            })
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return Ok(tokenHandler.WriteToken(token));
+        }*/
+
+
     }
 }

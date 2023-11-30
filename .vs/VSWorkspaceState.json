@@ -1,7 +1,12 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\Test",
+    "\\Test\\Test",
+    "\\Test\\Test\\Controllers",
+    "\\Test\\Test\\Migrations",
+    "\\Test\\Test\\Models"
   ],
-  "SelectedNode": "\\D:\\Файлы\\Документы\\Университет\\HITs\\2 курс\\Бек\\3 модуль\\3 git",
+  "SelectedNode": "\\Test\\Test\\Controllers\\TestController.cs",
   "PreviewInSolutionExplorer": false
 }
