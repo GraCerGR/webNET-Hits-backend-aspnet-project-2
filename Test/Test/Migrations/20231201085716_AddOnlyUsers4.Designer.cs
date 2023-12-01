@@ -11,8 +11,8 @@ using Test.Models;
 namespace Test.Migrations
 {
     [DbContext(typeof(TestContext))]
-    [Migration("20231130141057_AddValidationDate")]
-    partial class AddValidationDate
+    [Migration("20231201085716_AddOnlyUsers4")]
+    partial class AddOnlyUsers4
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,7 +24,7 @@ namespace Test.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Test.Models.UserDto", b =>
+            modelBuilder.Entity("Test.Models.User", b =>
                 {
                     b.Property<string>("id")
                         .HasColumnType("text");
@@ -43,34 +43,8 @@ namespace Test.Migrations
 
                     b.Property<string>("fullname")
                         .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("gender")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("phoneNumber")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("id");
-
-                    b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("Test.Models.UserRegisterModel", b =>
-                {
-                    b.Property<string>("fullname")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("birthDate")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("email")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("gender")
                         .IsRequired()
@@ -84,9 +58,9 @@ namespace Test.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("fullname");
+                    b.HasKey("id");
 
-                    b.ToTable("UserRegisterModels");
+                    b.ToTable("Users");
                 });
 #pragma warning restore 612, 618
         }

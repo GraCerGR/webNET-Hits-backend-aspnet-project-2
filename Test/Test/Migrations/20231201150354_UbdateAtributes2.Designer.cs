@@ -11,8 +11,8 @@ using Test.Models;
 namespace Test.Migrations
 {
     [DbContext(typeof(TestContext))]
-    [Migration("20231130113359_RegUsers2")]
-    partial class RegUsers2
+    [Migration("20231201150354_UbdateAtributes2")]
+    partial class UbdateAtributes2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,7 +24,7 @@ namespace Test.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Test.Models.UserDto", b =>
+            modelBuilder.Entity("Test.Models.User", b =>
                 {
                     b.Property<string>("id")
                         .HasColumnType("text");
@@ -41,35 +41,10 @@ namespace Test.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("fullname")
+                    b.Property<string>("fullName")
                         .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("gender")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("phoneNumber")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("id");
-
-                    b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("Test.Models.UserRegisterModel", b =>
-                {
-                    b.Property<string>("fullname")
-                        .HasColumnType("text");
-
-                    b.Property<string>("birthDate")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("email")
-                        .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("gender")
                         .IsRequired()
@@ -83,9 +58,9 @@ namespace Test.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("fullname");
+                    b.HasKey("id");
 
-                    b.ToTable("UserRegisterModels");
+                    b.ToTable("Users");
                 });
 #pragma warning restore 612, 618
         }

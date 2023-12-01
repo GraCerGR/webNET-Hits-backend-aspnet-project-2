@@ -2,7 +2,7 @@
 
 namespace Test.Models
 {
-    public class UserDto
+    public class User
     {
         public string id { get; set; }
 
@@ -12,7 +12,17 @@ namespace Test.Models
 
         [Required]
         [MinLength(1)]
-        public string fullname { get; set; }
+        [MaxLength(1000)]
+        public string fullName { get; set; }
+
+        [Required]
+        [MinLength(6)]
+        public string password { get; set; }
+
+        [Required]
+        [EmailAddress]
+        [MinLength(1)]
+        public string email { get; set; }
 
         [DataType(DataType.DateTime)]
         public string birthDate { get; set; }
@@ -21,13 +31,7 @@ namespace Test.Models
         [EnumDataType(typeof(Gender))]
         public string gender { get; set; }
 
-        [Required]
-        [EmailAddress]
-        [MinLength(1)]
-        public string email { get; set; }
-
         [Phone]
         public string phoneNumber { get; set; }
-
     }
 }

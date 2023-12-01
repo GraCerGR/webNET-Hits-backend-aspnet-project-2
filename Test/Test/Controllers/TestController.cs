@@ -8,61 +8,41 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
+using Test.Models.DTO;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace Test.Controllers
 {
-    [Route("/api/account/[controller]")]
+    [Route("/api/account/")]
     [ApiController]
     public class TestController : ControllerBase
     {
 
-        [HttpGet]
-
-        public ActionResult<UserDto> Get()
-        {
-            UserDto user = new UserDto();
-
-            return null;
-        }
-
-        [HttpGet("{id}")]
-
-        public string Get(int id)
-        {
-            return $"{id}";
-        }
-
-        [HttpPost("{name}")]
-        public string Post(string name)
-        {
-            return $"{name}";
-        }
-
         private readonly TestContext _context;
-        private readonly TestContext _regContext;
 
         public TestController(TestContext context, TestContext regContext)
         {
             _context = context;
-            _regContext = regContext;
         }
 
 
-        [HttpPost]
-        public async Task<ActionResult> Post(UserRegisterModel model)
+        [HttpPost("register")]
+        public async Task<ActionResult> register(UserRegisterModel model)
         {
             try
             {
                 // Создаем новый объект пользователя на основе данных из модели UserRegisterModel
-                UserDto user = new UserDto
+                User user = new User
                 {
                     id = Guid.NewGuid().ToString(), // Пример значения для id
                     createTime = DateTime.Now.ToString(), // Пример значения для createTime
-                    fullname = model.fullname,
+                    fullName = model.fullName,
                     birthDate = model.birthDate,
                     gender = model.gender,
                     email = model.email,
-                    phoneNumber = model.phoneNumber
+                    phoneNumber = model.phoneNumber,
+                    password = model.password,
                 };
 
                 // Добавляем пользователя в контекст базы данных
@@ -71,22 +51,22 @@ namespace Test.Controllers
                 // Сохраняем изменения в базе данных
                 await _context.SaveChangesAsync();
 
-/*                UserRegisterModel userReg = new UserRegisterModel
-                {
-                    fullname = model.fullname,
-                    password = model.password,
-                    email = model.email,
-                    birthDate = model.birthDate,
-                    gender = model.gender,
-                    phoneNumber = model.phoneNumber
-                };*/
+                /*                UserRegisterModel userReg = new UserRegisterModel
+                                {
+                                    fullname = model.fullname,
+                                    password = model.password,
+                                    email = model.email,
+                                    birthDate = model.birthDate,
+                                    gender = model.gender,
+                                    phoneNumber = model.phoneNumber
+                                };
 
 
-                // Добавляем пользователя в контекст базы данных UserRegisterContext
-                _regContext.UserRegisterModels.Add(model);
+                                // Добавляем пользователя в контекст базы данных UserRegisterContext
+                                _regContext.UserRegisterModels.Add(model);
 
-                // Сохраняем изменения в базе данных UserRegisterContext
-                await _regContext.SaveChangesAsync();
+                                // Сохраняем изменения в базе данных UserRegisterContext
+                                await _regContext.SaveChangesAsync();*/
 
 
 
@@ -119,10 +99,10 @@ namespace Test.Controllers
 
 
         [HttpPost("login")]
-        public IActionResult Login(LoginCredentials model)
+        public IActionResult login(LoginCredentials model)
         {
             // Проверяем наличие пользователя с указанным email в базе данных
-            var user = _regContext.UserRegisterModels.FirstOrDefault(u => u.email == model.email);
+            var user = _context.Users.FirstOrDefault(u => u.email == model.email);
             if (user == null)
             {
                 // Если пользователя с указанным email не существует, возвращаем ошибку
@@ -136,7 +116,7 @@ namespace Test.Controllers
                 return StatusCode(400, new { status = "error", message = "Неверный email или пароль." });
             }
 
-            var userDto = _context.Users.FirstOrDefault(u => u.email == user.email);
+            //var userDto = _context.Users.FirstOrDefault(u => u.email == user.email);
 
             // Генерируем токен для пользователя
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -147,9 +127,10 @@ namespace Test.Controllers
                 Expires = DateTime.UtcNow.AddHours(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
                 Issuer = "HITS",
+                Audience = "HITS",
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-            new Claim(ClaimTypes.Name, userDto.id) // Используем email пользователя в качестве имени в токене
+            new Claim(ClaimTypes.Name, user.id) // Используем email пользователя в качестве имени в токене
                 })
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -158,6 +139,97 @@ namespace Test.Controllers
             // Возвращаем токен в случае успеха
             return Ok(new { token = tokenString });
         }
+
+        [HttpGet("profile")]
+        [Authorize] // Требуется аутентификация
+        public ActionResult<UserDto> GetProfile()
+        {
+
+            // Получаем значение заголовка "Authorization"
+            string authorizationHeader = Request.Headers["Authorization"];
+
+            // Извлекаем токен Bearer из значения заголовка
+            string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+            // Расшифровываем и проверяем токен
+            var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+
+            // Извлекаем идентификатор пользователя из полезной нагрузки токена
+            string userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
+
+            // Ищем пользователя в базе данных по идентификатору
+            var user = _context.Users.FirstOrDefault(u => u.id == userId);
+
+
+            if (user == null)
+            {
+                // Если пользователь не найден, возвращаем ошибку
+                return NotFound();
+            }
+
+            // Создаем объект UserDto с данными профиля пользователя
+            var userProfile = new UserDto
+            {
+                fullName = user.fullName,
+                birthDate = user.birthDate,
+                gender = user.gender,
+                email = user.email,
+                phoneNumber = user.phoneNumber,
+                id = user.id,
+                createTime = user.createTime
+            };
+
+            // Возвращаем данные профиля пользователя
+            return Ok(userProfile);
+        }
+
+        [HttpPut("profile")]
+        [Authorize] // Требуется аутентификация
+        public async Task<IActionResult> UpdateProfile(UserEditModel updatedUserDto)
+        {
+            // Получаем идентификатор пользователя из токена
+            // Получаем значение заголовка "Authorization"
+            string authorizationHeader = Request.Headers["Authorization"];
+
+            // Извлекаем токен Bearer из значения заголовка
+            string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+            // Расшифровываем и проверяем токен
+            var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+
+            // Извлекаем идентификатор пользователя из полезной нагрузки токена
+            string userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
+
+            // Ищем пользователя в базе данных по идентификатору
+            var user = _context.Users.FirstOrDefault(u => u.id == userId);
+
+            if (user == null)
+            {
+                // Если пользователь не найден, возвращаем ошибку
+                return NotFound();
+            }
+
+            // Обновляем данные пользователя на основе полученного объекта UserDto
+            user.email = updatedUserDto.email;
+            user.fullName = updatedUserDto.fullName;
+            user.birthDate = updatedUserDto.birthDate;
+            user.gender = updatedUserDto.gender;
+            user.phoneNumber = updatedUserDto.phoneNumber;
+
+            // Сохраняем изменения в базе данных
+            await _context.SaveChangesAsync();
+
+            // Возвращаем обновленные данные профиля пользователя
+            return Ok();
+        }
+
+
 
 
         /*        [HttpGet("name")]
