@@ -15,13 +15,13 @@ namespace Test.Models
         public string fullName { get; set; }
 
         [DataType(DataType.DateTime)]
-        public string birthDate { get; set; }
+        public string? birthDate { get; set; }
 
         [Required]
         [EnumDataType(typeof(Gender))]
         public string gender { get; set; }
 
         [Phone]
-        public string phoneNumber { get; set; }
+        public string? phoneNumber { get; set; }
     }
 }

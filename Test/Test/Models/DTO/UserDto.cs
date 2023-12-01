@@ -15,7 +15,7 @@ namespace Test.Models.DTO
         public string fullName { get; set; }
 
         [DataType(DataType.DateTime)]
-        public string birthDate { get; set; }
+        public string? birthDate { get; set; }
 
         [Required]
         [EnumDataType(typeof(Gender))]
@@ -27,7 +27,7 @@ namespace Test.Models.DTO
         public string email { get; set; }
 
         [Phone]
-        public string phoneNumber { get; set; }
+        public string? phoneNumber { get; set; }
 
     }
 }

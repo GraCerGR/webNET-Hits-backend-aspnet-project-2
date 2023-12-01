@@ -28,6 +28,9 @@ namespace Test.Controllers
 
 
         [HttpPost("register")]
+        [ProducesResponseType(typeof(string), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(typeof(Response), 500)]
         public async Task<ActionResult> register(UserRegisterModel model)
         {
             try
@@ -50,24 +53,6 @@ namespace Test.Controllers
 
                 // Сохраняем изменения в базе данных
                 await _context.SaveChangesAsync();
-
-                /*                UserRegisterModel userReg = new UserRegisterModel
-                                {
-                                    fullname = model.fullname,
-                                    password = model.password,
-                                    email = model.email,
-                                    birthDate = model.birthDate,
-                                    gender = model.gender,
-                                    phoneNumber = model.phoneNumber
-                                };
-
-
-                                // Добавляем пользователя в контекст базы данных UserRegisterContext
-                                _regContext.UserRegisterModels.Add(model);
-
-                                // Сохраняем изменения в базе данных UserRegisterContext
-                                await _regContext.SaveChangesAsync();*/
-
 
 
                 // Генерация токена
@@ -99,6 +84,9 @@ namespace Test.Controllers
 
 
         [HttpPost("login")]
+        [ProducesResponseType(typeof(TokenResponse), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(typeof(Response), 500)]
         public IActionResult login(LoginCredentials model)
         {
             // Проверяем наличие пользователя с указанным email в базе данных
@@ -142,6 +130,9 @@ namespace Test.Controllers
 
         [HttpGet("profile")]
         [Authorize] // Требуется аутентификация
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(typeof(Response), 500)]
         public ActionResult<UserDto> GetProfile()
         {
 
@@ -188,6 +179,9 @@ namespace Test.Controllers
 
         [HttpPut("profile")]
         [Authorize] // Требуется аутентификация
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(typeof(Response), 500)]
         public async Task<IActionResult> UpdateProfile(UserEditModel updatedUserDto)
         {
             // Получаем идентификатор пользователя из токена
@@ -229,33 +223,24 @@ namespace Test.Controllers
             return Ok();
         }
 
+        [HttpPost("logout")]
+        [Authorize] // Требуется аутентификация
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(typeof(Response), 500)]
+        public IActionResult Logout()
+        {
+            string authorizationHeader = Request.Headers["Authorization"];
+            string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+            string userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
+            var user = _context.Users.FirstOrDefault(u => u.id == userId);
 
+            //Логика удаления токена
 
-
-        /*        [HttpGet("name")]
-                public IActionResult Login(string name)
-                {
-                    var tokenHandler = new JwtSecurityTokenHandler();
-                    var key = Encoding.UTF8.GetBytes("1234567890123456789012345678901234567890");
-
-                    var tokenDescriptor = new SecurityTokenDescriptor()
-                    {
-                        NotBefore = DateTime.UtcNow,
-                        Expires = DateTime.UtcNow.AddHours(1),
-                        SigningCredentials =
-                        new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
-                        Issuer = "HITS",
-                        Subject = new ClaimsIdentity(new Claim[]
-                    {
-                        new Claim(ClaimTypes.Name, name)
-                    })
-                    };
-
-                    var token = tokenHandler.CreateToken(tokenDescriptor);
-
-                    return Ok(tokenHandler.WriteToken(token));
-                }*/
-
+            return StatusCode(200, new Response { status = null, message = "Logged Out" });
+        }
 
     }
 }
