@@ -130,6 +130,7 @@ namespace Test.Controllers
 
         [HttpGet("profile")]
         [Authorize] // Требуется аутентификация
+        [ProducesResponseType(typeof(UserDto),200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
         [ProducesResponseType(typeof(Response), 500)]
