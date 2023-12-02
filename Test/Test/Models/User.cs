@@ -4,6 +4,7 @@ namespace Test.Models
 {
     public class User
     {
+        [Required]
         public string id { get; set; }
 
         [Required]

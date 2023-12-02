@@ -4,6 +4,7 @@ namespace Test.Models.DTO
 {
     public class UserDto
     {
+        [Required]
         public string id { get; set; }
 
         [Required]
