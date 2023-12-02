@@ -5,7 +5,7 @@
 namespace Test.Migrations
 {
     /// <inheritdoc />
-    public partial class AddBD : Migration
+    public partial class AddOnlyUsers4 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,10 +16,11 @@ namespace Test.Migrations
                 {
                     id = table.Column<string>(type: "text", nullable: false),
                     createTime = table.Column<string>(type: "text", nullable: false),
-                    fullname = table.Column<string>(type: "text", nullable: false),
+                    fullname = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
+                    password = table.Column<string>(type: "text", nullable: false),
+                    email = table.Column<string>(type: "text", nullable: false),
                     birthDate = table.Column<string>(type: "text", nullable: false),
                     gender = table.Column<string>(type: "text", nullable: false),
-                    email = table.Column<string>(type: "text", nullable: false),
                     phoneNumber = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>

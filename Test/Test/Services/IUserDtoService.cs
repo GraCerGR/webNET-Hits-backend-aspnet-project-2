@@ -1,8 +1,8 @@
-﻿using Test.Models;
+﻿using Test.Models.DTO;
 
 namespace Test.Services
 {
-    
+
     public interface IUserDtoService
     {
         UserDto[] Generation();

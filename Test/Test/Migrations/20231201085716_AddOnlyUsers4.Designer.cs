@@ -11,8 +11,8 @@ using Test.Models;
 namespace Test.Migrations
 {
     [DbContext(typeof(TestContext))]
-    [Migration("20231126121526_AddBD")]
-    partial class AddBD
+    [Migration("20231201085716_AddOnlyUsers4")]
+    partial class AddOnlyUsers4
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,7 +24,7 @@ namespace Test.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Test.Models.UserDto", b =>
+            modelBuilder.Entity("Test.Models.User", b =>
                 {
                     b.Property<string>("id")
                         .HasColumnType("text");
@@ -43,9 +43,14 @@ namespace Test.Migrations
 
                     b.Property<string>("fullname")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("gender")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("password")
                         .IsRequired()
                         .HasColumnType("text");
 

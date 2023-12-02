@@ -1,11 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace Test.Models
 {
-    public class UserRegisterModel
+    public class User
     {
+        public string id { get; set; }
+
+        [Required]
+        [DataType(DataType.Date)]
+        public string createTime { get; set; }
+
         [Required]
         [MinLength(1)]
         [MaxLength(1000)]
