@@ -12,6 +12,7 @@ using Test.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
 using System.Diagnostics;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.Hosting;
 
 namespace Test.Controllers
 {
@@ -108,18 +109,19 @@ namespace Test.Controllers
 
         [HttpGet("{id}")]
         [Authorize] // Требуется аутентификация
-        [ProducesResponseType(typeof(UserDto), 200)]
+        [ProducesResponseType(typeof(PostDto), 200)] //FullPostDto
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
         [ProducesResponseType(typeof(Response), 404)]
         [ProducesResponseType(typeof(Response), 500)]
         public IActionResult GetPostId(string id)
         {
-            var post = _context.Posts.FirstOrDefault(p => p.id == id);
+            var post = _context.Posts.SingleOrDefault(p => p.id == id);
             if (post == null)
             {
                 return StatusCode(404, new { status = "error", message = $"Post with id='{id}' not found in  database" });
             }
+            //post.tags = _context.Tags.Where(t => t.PostDtoid == id).ToList();
             return Ok(post);
         }
 
@@ -131,8 +133,9 @@ namespace Test.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(typeof(Response), 404)]
         [ProducesResponseType(typeof(Response), 500)]
-        public IActionResult GetPostsByAuthor([Required][FromQuery] string?[] tags,[FromQuery]string? author)
+        public IActionResult GetPosts([FromQuery] string?[] tags,[FromQuery]string? author)
         {
+            //var posts = _context.Posts.Include(p => p.tags).ToList();
             var posts = _context.Posts.ToList();
 
             if (!string.IsNullOrEmpty(author))

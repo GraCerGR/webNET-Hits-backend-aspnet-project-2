@@ -18,5 +18,7 @@ namespace Test.Models.DTO
 
         public string name { get; set; }
 
+        //public string PostDtoid { get; set; }
+
     }
 }
