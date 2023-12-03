@@ -25,7 +25,7 @@ namespace Test.Controllers
         public PostController(TestContext context/*, IGetTokenService tokenService*/)
         {
             _context = context;
-           // _tokenService = tokenService;
+            // _tokenService = tokenService;
         }
 
         [HttpPost]
@@ -103,6 +103,23 @@ namespace Test.Controllers
 
             // Возвращаем созданный пост
             return Ok(post.id);
+        }
+
+        [HttpGet("id")]
+        [Authorize] // Требуется аутентификация
+        [ProducesResponseType(typeof(UserDto), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(typeof(Response), 404)]
+        [ProducesResponseType(typeof(Response), 500)]
+        public IActionResult GetPostId(string id)
+        {
+            var post = _context.Posts.FirstOrDefault(p => p.id == id);
+            if (post == null)
+            {
+                return StatusCode(404, new { status = "error", message = $"Post with id='{id}' not found in  database" });
+            }
+            return Ok(post);
         }
     }
 }
