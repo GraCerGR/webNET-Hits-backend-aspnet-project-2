@@ -11,6 +11,7 @@ using System.Security.Claims;
 using Test.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
 using System.Diagnostics;
+using System.ComponentModel.DataAnnotations;
 
 namespace Test.Controllers
 {
@@ -121,5 +122,32 @@ namespace Test.Controllers
             }
             return Ok(post);
         }
+
+
+        [HttpGet]
+        [Authorize] // Требуется аутентификация
+        [ProducesResponseType(typeof(UserDto), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(typeof(Response), 404)]
+        [ProducesResponseType(typeof(Response), 500)]
+        public IActionResult GetPostsByAuthor([Required][FromQuery] string?[] tags,[FromQuery]string? author)
+        {
+            var posts = _context.Posts.ToList();
+
+            if (!string.IsNullOrEmpty(author))
+            {
+                posts = _context.Posts.Where(p => p.author.Contains(author)).ToList();
+            }
+               
+
+            if (tags != null && tags.Length > 0)
+            {
+                posts = _context.Posts.Where(p => p.tags.Any(t => tags.Contains(t.id))).ToList();
+            }
+
+            return Ok(posts);
+        }
+
     }
 }
