@@ -73,7 +73,7 @@ namespace Test.Controllers
                 var tokenString = tokenHandler.WriteToken(token);
 
                 // Возвращение токена в качестве ответа
-                return Ok(tokenString);
+                return Ok(new { token = tokenString });
             }
             catch (Exception ex)
             {

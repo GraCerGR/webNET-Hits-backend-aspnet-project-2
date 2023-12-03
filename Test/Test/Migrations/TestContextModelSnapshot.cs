@@ -27,7 +27,6 @@ namespace Test.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("addressId")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("author")
@@ -42,11 +41,9 @@ namespace Test.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("communityId")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("communityName")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("createTime")
@@ -61,7 +58,6 @@ namespace Test.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("image")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("likes")
@@ -70,16 +66,11 @@ namespace Test.Migrations
                     b.Property<int>("readingTime")
                         .HasColumnType("integer");
 
-                    b.Property<string>("tagsid")
-                        .HasColumnType("text");
-
                     b.Property<string>("title")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("id");
-
-                    b.HasIndex("tagsid");
 
                     b.ToTable("Posts");
                 });
@@ -87,6 +78,9 @@ namespace Test.Migrations
             modelBuilder.Entity("Test.Models.DTO.TagDto", b =>
                 {
                     b.Property<string>("id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PostDtoid")
                         .HasColumnType("text");
 
                     b.Property<string>("createTime")
@@ -99,7 +93,9 @@ namespace Test.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("TagDto");
+                    b.HasIndex("PostDtoid");
+
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("Test.Models.User", b =>
@@ -139,12 +135,15 @@ namespace Test.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Test.Models.DTO.TagDto", b =>
+                {
+                    b.HasOne("Test.Models.DTO.PostDto", null)
+                        .WithMany("tags")
+                        .HasForeignKey("PostDtoid");
+                });
+
             modelBuilder.Entity("Test.Models.DTO.PostDto", b =>
                 {
-                    b.HasOne("Test.Models.DTO.TagDto", "tags")
-                        .WithMany()
-                        .HasForeignKey("tagsid");
-
                     b.Navigation("tags");
                 });
 #pragma warning restore 612, 618

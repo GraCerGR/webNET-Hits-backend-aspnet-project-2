@@ -15,18 +15,25 @@ namespace Test.Models
 
         public DbSet<PostDto> Posts { get; set; }
 
+        public DbSet<TagDto> Tags { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>().HasKey(x => x.id);
 
             modelBuilder.Entity<PostDto>().HasKey(x => x.id);
 
+            modelBuilder.Entity<TagDto>().HasKey(x => x.id);
+
             modelBuilder.Entity<User>(options => { });
 
             modelBuilder.Entity<PostDto>(options => { });
+
+            modelBuilder.Entity<TagDto>(options => { });
 
             base.OnModelCreating(modelBuilder);
 
         }
     }
+
 }

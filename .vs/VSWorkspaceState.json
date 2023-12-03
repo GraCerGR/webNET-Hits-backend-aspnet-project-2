@@ -4,7 +4,6 @@
     "\\Test",
     "\\Test\\Test",
     "\\Test\\Test\\Controllers",
-    "\\Test\\Test\\Migrations",
     "\\Test\\Test\\Models"
   ],
   "SelectedNode": "\\Test\\Test\\Controllers\\TestController.cs",

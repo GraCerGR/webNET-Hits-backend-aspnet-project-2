@@ -27,7 +27,7 @@ namespace Test.Models.DTO
 
         public int readingTime { get; set; }
 
-        public string image { get; set; }
+        public string? image { get; set; }
 
         [Required]
 
@@ -36,13 +36,13 @@ namespace Test.Models.DTO
         [Required]
         [MinLength(1)]
 
-        public string author { get; set;}
+        public string? author { get; set;}
 
-        public string communityId { get; set; }
+        public string? communityId { get; set; }
 
-        public string communityName { get; set; }
+        public string? communityName { get; set; }
 
-        public string addressId { get; set; }
+        public string? addressId { get; set; }
 
         [Required]
         [DefaultValue(0)]
@@ -59,7 +59,8 @@ namespace Test.Models.DTO
 
         public int commentsCount { get; set; }
 
-        public TagDto tags { get; set; }
+        [Required]
+        public List<TagDto> tags { get; set; }
 
     }
 }

@@ -21,10 +21,12 @@ namespace Test.Models.DTO
 
         [Url]
         [MaxLength(1000)]
-        public string image { get; set; }
+        public string? image { get; set; }
 
-        public string addressId { get; set; }
+        public string? addressId { get; set; }
 
-        public TagDto tags { get; set; }
+        [Required]
+        [MinLength(1)]
+        public string[] tags { get; set; }
     }
 }
