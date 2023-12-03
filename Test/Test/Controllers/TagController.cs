@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Test.Controllers
 {
-    [Route("/api/account/")]
+    [Route("/api/")]
     [ApiController]
     public class TagController : ControllerBase
     {
@@ -25,7 +25,7 @@ namespace Test.Controllers
             _context = context;
         }
 
-        [HttpGet]
+        [HttpGet("tag")]
         [ProducesResponseType(typeof(TagDto), 200)]
         [ProducesResponseType(typeof(Response), 500)]
         public IActionResult GetTags()

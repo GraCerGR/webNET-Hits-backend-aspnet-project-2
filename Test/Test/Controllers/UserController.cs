@@ -16,12 +16,12 @@ namespace Test.Controllers
 {
     [Route("/api/account/")]
     [ApiController]
-    public class TestController : ControllerBase
+    public class UserController : ControllerBase
     {
 
         private readonly TestContext _context;
 
-        public TestController(TestContext context, TestContext regContext)
+        public UserController(TestContext context, TestContext regContext)
         {
             _context = context;
         }

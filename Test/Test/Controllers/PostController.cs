@@ -14,7 +14,7 @@ using System.Diagnostics;
 
 namespace Test.Controllers
 {
-    [Route("/api/account/")]
+    [Route("/api/post/")]
     [ApiController]
     public class PostController : ControllerBase
     {
@@ -105,7 +105,7 @@ namespace Test.Controllers
             return Ok(post.id);
         }
 
-        [HttpGet("id")]
+        [HttpGet("{id}")]
         [Authorize] // Требуется аутентификация
         [ProducesResponseType(typeof(UserDto), 200)]
         [ProducesResponseType(400)]
