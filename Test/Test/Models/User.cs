@@ -34,5 +34,9 @@ namespace Test.Models
 
         [Phone]
         public string? phoneNumber { get; set; }
+
+        public int posts { get; set; }
+
+        public int likes { get; set; }
     }
 }
