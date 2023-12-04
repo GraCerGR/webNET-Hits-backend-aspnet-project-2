@@ -28,8 +28,8 @@ namespace Test.Controllers
 
 
         [HttpPost("register")]
-        [ProducesResponseType(typeof(string), 200)]
-        [ProducesResponseType(400)]
+        [ProducesResponseType(typeof(TokenResponse), 200)]
+        [ProducesResponseType(typeof(void), 400)]
         [ProducesResponseType(typeof(Response), 500)]
         public async Task<ActionResult> register(UserRegisterModel model)
         {
@@ -85,7 +85,7 @@ namespace Test.Controllers
 
         [HttpPost("login")]
         [ProducesResponseType(typeof(TokenResponse), 200)]
-        [ProducesResponseType(400)]
+        [ProducesResponseType(typeof(void), 400)]
         [ProducesResponseType(typeof(Response), 500)]
         public IActionResult login(LoginCredentials model)
         {
@@ -131,8 +131,7 @@ namespace Test.Controllers
         [HttpGet("profile")]
         [Authorize] // Требуется аутентификация
         [ProducesResponseType(typeof(UserDto),200)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
+        [ProducesResponseType(typeof(void), 401)]
         [ProducesResponseType(typeof(Response), 500)]
         public ActionResult<UserDto> GetProfile()
         {
@@ -180,8 +179,8 @@ namespace Test.Controllers
 
         [HttpPut("profile")]
         [Authorize] // Требуется аутентификация
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
+        [ProducesResponseType(typeof(void), 400)]
+        [ProducesResponseType(typeof(void), 401)]
         [ProducesResponseType(typeof(Response), 500)]
         public async Task<IActionResult> UpdateProfile(UserEditModel updatedUserDto)
         {
@@ -226,8 +225,7 @@ namespace Test.Controllers
 
         [HttpPost("logout")]
         [Authorize] // Требуется аутентификация
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
+        [ProducesResponseType(typeof(void), 401)]
         [ProducesResponseType(typeof(Response), 500)]
         public IActionResult Logout()
         {
