@@ -33,8 +33,9 @@ namespace Test.Controllers
         [HttpPost]
         [Authorize] // Требуется аутентификация
         [ProducesResponseType(typeof(UserDto), 200)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
+        [ProducesResponseType(typeof(void), 400)]
+        [ProducesResponseType(typeof(Response), 401)]
+        [ProducesResponseType(typeof(Response), 404)]
         [ProducesResponseType(typeof(Response), 500)]
         public IActionResult CreatePost(CreatePostDto postDto)
         {
@@ -109,9 +110,9 @@ namespace Test.Controllers
 
         [HttpGet("{id}")]
         [Authorize] // Требуется аутентификация
-        [ProducesResponseType(typeof(PostDto), 200)] //FullPostDto
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
+        [ProducesResponseType(typeof(PostDto), 200)] //нужно FullPostDto!!!!!!!!!!!!!!!!!
+        [ProducesResponseType(typeof(void), 400)]
+        [ProducesResponseType(typeof(Response), 401)]
         [ProducesResponseType(typeof(Response), 404)]
         [ProducesResponseType(typeof(Response), 500)]
         public IActionResult GetPostId(string id)
@@ -128,10 +129,10 @@ namespace Test.Controllers
 
         [HttpGet]
         [Authorize] // Требуется аутентификация
-        [ProducesResponseType(typeof(UserDto), 200)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(typeof(Response), 404)]
+        [ProducesResponseType(typeof(PostPagedListDto), 200)]
+        [ProducesResponseType(typeof(void), 400)]
+        [ProducesResponseType(typeof(void), 401)]
+        [ProducesResponseType(typeof(void), 404)]
         [ProducesResponseType(typeof(Response), 500)]
         public IActionResult GetPosts([FromQuery] string?[] tags,[FromQuery]string? author)
         {

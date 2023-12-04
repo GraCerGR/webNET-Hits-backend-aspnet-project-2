@@ -179,6 +179,7 @@ namespace Test.Controllers
 
         [HttpPut("profile")]
         [Authorize] // Требуется аутентификация
+        [ProducesResponseType(typeof(UserDto), 200)]
         [ProducesResponseType(typeof(void), 400)]
         [ProducesResponseType(typeof(void), 401)]
         [ProducesResponseType(typeof(Response), 500)]
