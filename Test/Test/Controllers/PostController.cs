@@ -156,23 +156,37 @@ namespace Test.Controllers
         [ProducesResponseType(typeof(void), 401)]
         [ProducesResponseType(typeof(void), 404)]
         [ProducesResponseType(typeof(Response), 500)]
-        public IActionResult GetPosts([FromQuery] string?[] tags,[FromQuery]string? author)
+        public IActionResult GetPosts([FromQuery] string?[] tags,[FromQuery]string? author, int? min, int? max)
         {
             //var posts = _context.Posts.Include(p => p.tags).ToList();
-            var posts = _context.Posts.ToList();
+            //var posts = _context.Posts.ToList();
+            var posts = _context.Posts.AsQueryable().ToList();
 
             if (!string.IsNullOrEmpty(author))
             {
-                posts = _context.Posts.Where(p => p.author.Contains(author)).ToList();
+                posts = posts.Where(p => p.author.Contains(author)).ToList();
             }
                
 
             if (tags != null && tags.Length > 0)
             {
                 var postIdsWithTags = _context.PostTags.Where(pt => tags.Contains(pt.tagId)).Select(pt => pt.postId).Distinct();
-                var posts1 = _context.Posts.Where(p => postIdsWithTags.Contains(p.id));
-                posts = posts1.ToList();
+                posts = posts.Where(p => postIdsWithTags.Contains(p.id)).ToList();
             }
+
+
+            if (min.HasValue)
+            {
+                posts = posts.Where(p => p.readingTime >= min.Value).ToList();
+            }
+
+            // Фильтрация по максимальному времени чтения
+            if (max.HasValue)
+            {
+                posts = posts.Where(p => p.readingTime <= max.Value).ToList();
+            }
+
+
 
             foreach (PostDto post in posts)
             {
