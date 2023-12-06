@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Diagnostics;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Hosting;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Test.Controllers
 {
@@ -141,9 +142,7 @@ namespace Test.Controllers
             //post.tags = _context.Tags.Where(t => t.PostDtoid == id).ToList();
 
             var tagIds = _context.PostTags.Where(pt => pt.postId == post.id).Select(pt => pt.tagId).ToList();
-
             var tags = _context.Tags.Where(t => tagIds.Contains(t.id)).ToList();
-
             post.tags = tags;
 
             return Ok(post);
@@ -168,10 +167,19 @@ namespace Test.Controllers
             }
                
 
-/*            if (tags != null && tags.Length > 0)
+            if (tags != null && tags.Length > 0)
             {
-                posts = _context.Posts.Where(p => p.tags.Any(t => tags.Contains(t.id))).ToList();
-            }*/
+                var postIdsWithTags = _context.PostTags.Where(pt => tags.Contains(pt.tagId)).Select(pt => pt.postId).Distinct();
+                var posts1 = _context.Posts.Where(p => postIdsWithTags.Contains(p.id));
+                posts = posts1.ToList();
+            }
+
+            foreach (PostDto post in posts)
+            {
+                var tagIds = _context.PostTags.Where(pt => pt.postId == post.id).Select(pt => pt.tagId).ToList();
+                var tag = _context.Tags.Where(t => tagIds.Contains(t.id)).ToList();
+                post.tags = tag;
+            }
 
             return Ok(posts);
         }
