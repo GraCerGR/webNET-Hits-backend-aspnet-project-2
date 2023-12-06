@@ -2,9 +2,9 @@
 {
     public enum PostSorting
     {
-        CreateDesc, 
-        CreateAsc, 
-        LikeAsc, 
+        CreateDesc,
+        CreateAsc,
+        LikeAsc,
         LikeDesc
     }
 }

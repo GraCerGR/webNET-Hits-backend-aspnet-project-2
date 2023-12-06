@@ -156,7 +156,7 @@ namespace Test.Controllers
         [ProducesResponseType(typeof(void), 401)]
         [ProducesResponseType(typeof(void), 404)]
         [ProducesResponseType(typeof(Response), 500)]
-        public IActionResult GetPosts([FromQuery] string?[] tags,[FromQuery]string? author, int? min, int? max)
+        public IActionResult GetPosts([FromQuery] string?[] tags,[FromQuery]string? author, int? min, int? max, PostSorting? sorting)
         {
             //var posts = _context.Posts.Include(p => p.tags).ToList();
             //var posts = _context.Posts.ToList();
@@ -186,14 +186,34 @@ namespace Test.Controllers
                 posts = posts.Where(p => p.readingTime <= max.Value).ToList();
             }
 
-
-
             foreach (PostDto post in posts)
             {
                 var tagIds = _context.PostTags.Where(pt => pt.postId == post.id).Select(pt => pt.tagId).ToList();
                 var tag = _context.Tags.Where(t => tagIds.Contains(t.id)).ToList();
                 post.tags = tag;
             }
+
+
+
+            if (sorting.HasValue)
+            {
+                switch (sorting.Value)
+                {
+                    case PostSorting.CreateDesc:
+                        posts = posts.OrderByDescending(p => p.createTime).ToList();
+                        break;
+                    case PostSorting.CreateAsc:
+                        posts = posts.OrderBy(p => p.createTime).ToList();
+                        break;
+                    case PostSorting.LikeAsc:
+                        posts = posts.OrderBy(p => p.likes).ToList();
+                        break;
+                    case PostSorting.LikeDesc:
+                        posts = posts.OrderByDescending(p => p.likes).ToList();
+                        break;
+                }
+            }
+
 
             return Ok(posts);
         }
