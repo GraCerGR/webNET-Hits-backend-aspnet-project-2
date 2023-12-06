@@ -61,6 +61,12 @@ namespace Test.Controllers
                 }
             }
 
+            List<string> tagIds1 = new List<string>();
+            foreach (TagDto tag in tags)
+            {
+                tagIds1.Add(tag.id);
+            }
+
             if (!ModelState.IsValid)
             {
                 // Возвращаем ответ с ошибкой валидации модели
@@ -96,13 +102,23 @@ namespace Test.Controllers
                 likes = 0,
                 hasLike = false,
                 commentsCount = 0,
-                tags = tags,
+                //tags = tags,
             };
 
             // Добавляем пост в контекст базы данных
             _context.Posts.Add(post);
-            // Сохраняем изменения в базе данных
-            _context.SaveChanges();
+
+            foreach (string tagId in tagIds1)
+            {
+                var tags_database = new PostTag
+                {
+                    postId = post.id,
+                    tagId = tagId,
+                };
+                _context.PostTags.Add(tags_database);
+                _context.SaveChanges();
+            }
+
 
             // Возвращаем созданный пост
             return Ok(post.id);
@@ -145,10 +161,10 @@ namespace Test.Controllers
             }
                
 
-            if (tags != null && tags.Length > 0)
+/*            if (tags != null && tags.Length > 0)
             {
                 posts = _context.Posts.Where(p => p.tags.Any(t => tags.Contains(t.id))).ToList();
-            }
+            }*/
 
             return Ok(posts);
         }

@@ -58,10 +58,10 @@ namespace Test.Models.DTO
         public int commentsCount { get; set; }
 
         [Required]
-        public List<TagDto> tags { get; set; }
+        public TagDto tags { get; set; }
 
         [Required]
 
-        public List<CommentDto> comments { get; set; }
+        public CommentDto comments { get; set; }
     }
 }
