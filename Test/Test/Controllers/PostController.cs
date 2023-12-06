@@ -139,6 +139,13 @@ namespace Test.Controllers
                 return StatusCode(404, new { status = "error", message = $"Post with id='{id}' not found in  database" });
             }
             //post.tags = _context.Tags.Where(t => t.PostDtoid == id).ToList();
+
+            var tagIds = _context.PostTags.Where(pt => pt.postId == post.id).Select(pt => pt.tagId).ToList();
+
+            var tags = _context.Tags.Where(t => tagIds.Contains(t.id)).ToList();
+
+            post.tags = tags;
+
             return Ok(post);
         }
 
