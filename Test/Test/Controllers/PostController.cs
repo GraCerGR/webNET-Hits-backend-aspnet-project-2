@@ -14,6 +14,7 @@ using System.Diagnostics;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Hosting;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using System.ComponentModel;
 
 namespace Test.Controllers
 {
@@ -156,67 +157,79 @@ namespace Test.Controllers
         [ProducesResponseType(typeof(void), 401)]
         [ProducesResponseType(typeof(void), 404)]
         [ProducesResponseType(typeof(Response), 500)]
-        public IActionResult GetPosts([FromQuery] string?[] tags, [FromQuery] string? author, int? min, int? max, PostSorting? sorting)
+        public IActionResult GetPosts([FromQuery] string?[] tags, [FromQuery] string? author, int? min, int? max, PostSorting? sorting, [Range(1, int.MaxValue), DefaultValue(1)] int? page, [Range(1, int.MaxValue), DefaultValue(5)] int? size)
         {
-            //var posts = _context.Posts.Include(p => p.tags).ToList();
-            //var posts = _context.Posts.ToList();
-            var posts = _context.Posts.AsQueryable().ToList();
+            var posts = _context.Posts.AsQueryable();
 
             if (!string.IsNullOrEmpty(author))
             {
-                posts = posts.Where(p => p.author.Contains(author)).ToList();
+                posts = posts.Where(p => p.author.Contains(author));
             }
-
 
             if (tags != null && tags.Length > 0)
             {
                 var tagGuids = tags.Select(Guid.Parse).ToArray();
                 var postIdsWithTags = _context.PostTags.Where(pt => tagGuids.Contains(pt.tagId)).Select(pt => pt.postId).Distinct();
-                posts = posts.Where(p => postIdsWithTags.Contains(p.id)).ToList();
+                posts = posts.Where(p => postIdsWithTags.Contains(p.id));
             }
-
 
             if (min.HasValue)
             {
-                posts = posts.Where(p => p.readingTime >= min.Value).ToList();
+                posts = posts.Where(p => p.readingTime >= min.Value);
             }
 
-            // Фильтрация по максимальному времени чтения
             if (max.HasValue)
             {
-                posts = posts.Where(p => p.readingTime <= max.Value).ToList();
+                posts = posts.Where(p => p.readingTime <= max.Value);
             }
 
-            foreach (PostDto post in posts)
+            var postList = posts.ToList();
+
+            foreach (PostDto post in postList)
             {
                 var tagIds = _context.PostTags.Where(pt => pt.postId == post.id).Select(pt => pt.tagId).ToList();
                 var tag = _context.Tags.Where(t => tagIds.Contains(t.id)).ToList();
                 post.tags = tag;
             }
 
-
-
             if (sorting.HasValue)
             {
                 switch (sorting.Value)
                 {
                     case PostSorting.CreateDesc:
-                        posts = posts.OrderByDescending(p => p.createTime).ToList();
+                        postList = postList.OrderByDescending(p => p.createTime).ToList();
                         break;
                     case PostSorting.CreateAsc:
-                        posts = posts.OrderBy(p => p.createTime).ToList();
+                        postList = postList.OrderBy(p => p.createTime).ToList();
                         break;
                     case PostSorting.LikeAsc:
-                        posts = posts.OrderBy(p => p.likes).ToList();
+                        postList = postList.OrderBy(p => p.likes).ToList();
                         break;
                     case PostSorting.LikeDesc:
-                        posts = posts.OrderByDescending(p => p.likes).ToList();
+                        postList = postList.OrderByDescending(p => p.likes).ToList();
                         break;
                 }
             }
 
+            var totalCount = postList.Count();
 
-            return Ok(posts);
+            if (size.HasValue && page.HasValue)
+            {
+                postList = postList.Skip((page.Value - 1) * size.Value).Take(size.Value).ToList();
+            }
+
+            var result = new PostPagedListDto
+            {
+                posts = postList,
+                pagination = new PageInfoModel
+                {
+                    size = size ?? 0,
+                    count = (int)Math.Ceiling((double)totalCount / size.Value),
+                    current = page ?? 0
+                }
+            };
+
+            return Ok(result);
         }
 
     }
