@@ -156,7 +156,7 @@ namespace Test.Controllers
         [ProducesResponseType(typeof(void), 401)]
         [ProducesResponseType(typeof(void), 404)]
         [ProducesResponseType(typeof(Response), 500)]
-        public IActionResult GetPosts([FromQuery] string?[] tags,[FromQuery]string? author, int? min, int? max, PostSorting? sorting)
+        public IActionResult GetPosts([FromQuery] string?[] tags, [FromQuery] string? author, int? min, int? max, PostSorting? sorting)
         {
             //var posts = _context.Posts.Include(p => p.tags).ToList();
             //var posts = _context.Posts.ToList();
@@ -166,7 +166,7 @@ namespace Test.Controllers
             {
                 posts = posts.Where(p => p.author.Contains(author)).ToList();
             }
-               
+
 
             if (tags != null && tags.Length > 0)
             {
@@ -220,4 +220,5 @@ namespace Test.Controllers
         }
 
     }
+
 }
