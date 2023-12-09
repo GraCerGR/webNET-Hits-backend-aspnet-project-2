@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Test.Models;
@@ -11,9 +12,11 @@ using Test.Models;
 namespace Test.Migrations
 {
     [DbContext(typeof(TestContext))]
-    partial class TestContextModelSnapshot : ModelSnapshot
+    [Migration("20231209170436_AddCommunityUser")]
+    partial class AddCommunityUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,13 +38,13 @@ namespace Test.Migrations
                     b.ToTable("CommunityUsers");
                 });
 
-            modelBuilder.Entity("Test.Models.DTO.CommunityFullDto", b =>
+            modelBuilder.Entity("Test.Models.DTO.CommunityDto", b =>
                 {
                     b.Property<Guid>("id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("createTime")
+                    b.Property<string>("createDate")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -155,43 +158,6 @@ namespace Test.Migrations
                     b.ToTable("Tags");
                 });
 
-            modelBuilder.Entity("Test.Models.DTO.UserDto", b =>
-                {
-                    b.Property<Guid>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CommunityFullDtoid")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("birthDate")
-                        .HasColumnType("text");
-
-                    b.Property<string>("createTime")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("email")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("fullName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("gender")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("phoneNumber")
-                        .HasColumnType("text");
-
-                    b.HasKey("id");
-
-                    b.HasIndex("CommunityFullDtoid");
-
-                    b.ToTable("UserDto");
-                });
-
             modelBuilder.Entity("Test.Models.PostLiked", b =>
                 {
                     b.Property<Guid>("userId")
@@ -253,18 +219,6 @@ namespace Test.Migrations
                     b.HasOne("Test.Models.DTO.PostDto", null)
                         .WithMany("tags")
                         .HasForeignKey("PostDtoid");
-                });
-
-            modelBuilder.Entity("Test.Models.DTO.UserDto", b =>
-                {
-                    b.HasOne("Test.Models.DTO.CommunityFullDto", null)
-                        .WithMany("administrators")
-                        .HasForeignKey("CommunityFullDtoid");
-                });
-
-            modelBuilder.Entity("Test.Models.DTO.CommunityFullDto", b =>
-                {
-                    b.Navigation("administrators");
                 });
 
             modelBuilder.Entity("Test.Models.DTO.PostDto", b =>

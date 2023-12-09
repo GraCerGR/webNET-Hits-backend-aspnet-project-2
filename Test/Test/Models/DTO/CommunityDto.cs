@@ -10,7 +10,7 @@ namespace Test.Models.DTO
 
         [Required]
         [DataType(DataType.DateTime)]
-        public string createDate { get; set; }
+        public string createTime { get; set; }
 
         [Required]
         [MinLength(1)]

@@ -26,11 +26,14 @@ namespace Test.Migrations
                 {
                     table.PrimaryKey("PK_Communities", x => x.id);
                 });
+
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+
+
             migrationBuilder.DropTable(
                 name: "Communities");
         }

@@ -128,7 +128,7 @@ namespace Test.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize] // Требуется аутентификация
+        //[Authorize] // Требуется аутентификация
         [ProducesResponseType(typeof(PostFullDto), 200)] //нужно FullPostDto!!!!!!!!!!!!!!!!!
         [ProducesResponseType(typeof(void), 400)]
         [ProducesResponseType(typeof(Response), 401)]

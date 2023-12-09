@@ -21,7 +21,9 @@ namespace Test.Models
 
         public DbSet<PostLiked> PostLikes { get; set; }
 
-        public DbSet<CommunityDto> Communities { get; set; }
+        public DbSet<CommunityFullDto> Communities { get; set; }
+
+        public DbSet<CommunityUser> CommunityUsers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -35,7 +37,9 @@ namespace Test.Models
 
             modelBuilder.Entity<PostLiked>().HasKey(x => new { x.userId, x.postId });
 
-            modelBuilder.Entity<CommunityDto>().HasKey(x => x.id);
+            modelBuilder.Entity<CommunityFullDto>().HasKey(x => x.id);
+
+            modelBuilder.Entity<CommunityUser>().HasKey(x => new { x.communityId, x.userId });
 
 
             modelBuilder.Entity<User>(options => { });
@@ -48,7 +52,9 @@ namespace Test.Models
 
             modelBuilder.Entity<PostLiked>(options => { });
 
-            modelBuilder.Entity<CommunityDto>(options => { });
+            modelBuilder.Entity<CommunityFullDto>(options => { });
+
+            modelBuilder.Entity<CommunityUser>(options => { });
 
             base.OnModelCreating(modelBuilder);
 
