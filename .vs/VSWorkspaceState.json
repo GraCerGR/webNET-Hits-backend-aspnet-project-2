@@ -4,9 +4,9 @@
     "\\Test",
     "\\Test\\Test",
     "\\Test\\Test\\Controllers",
-    "\\Test\\Test\\Migrations",
-    "\\Test\\Test\\Models"
+    "\\Test\\Test\\Models",
+    "\\Test\\Test\\Models\\DTO"
   ],
-  "SelectedNode": "\\Test\\Test\\Controllers\\TestController.cs",
+  "SelectedNode": "\\Test\\Test\\Models\\DTO\\PostDto.cs",
   "PreviewInSolutionExplorer": false
 }

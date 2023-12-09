@@ -1,15 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Test.Models
+namespace Test.Models.DTO
 {
-    public class UserEditModel
+    public class AuthorDto
     {
-
-        [Required]
-        [EmailAddress]
-        [MinLength(1)]
-        public string email { get; set; }
-
         [Required]
         [MinLength(1)]
         public string fullName { get; set; }
@@ -21,7 +15,11 @@ namespace Test.Models
         //[EnumDataType(typeof(Gender))]
         public Gender gender { get; set; }
 
-        [Phone]
-        public string? phoneNumber { get; set; }
+        public int posts { get; set; }
+
+        public int likes { get; set; }
+
+        [DataType(DataType.DateTime)]
+        public string created { get; set; }
     }
 }

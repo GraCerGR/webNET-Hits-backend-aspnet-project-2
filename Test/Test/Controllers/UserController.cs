@@ -16,20 +16,20 @@ namespace Test.Controllers
 {
     [Route("/api/account/")]
     [ApiController]
-    public class TestController : ControllerBase
+    public class UserController : ControllerBase
     {
 
         private readonly TestContext _context;
 
-        public TestController(TestContext context, TestContext regContext)
+        public UserController(TestContext context, TestContext regContext)
         {
             _context = context;
         }
 
 
         [HttpPost("register")]
-        [ProducesResponseType(typeof(string), 200)]
-        [ProducesResponseType(400)]
+        [ProducesResponseType(typeof(TokenResponse), 200)]
+        [ProducesResponseType(typeof(void), 400)]
         [ProducesResponseType(typeof(Response), 500)]
         public async Task<ActionResult> register(UserRegisterModel model)
         {
@@ -38,7 +38,7 @@ namespace Test.Controllers
                 // Создаем новый объект пользователя на основе данных из модели UserRegisterModel
                 User user = new User
                 {
-                    id = Guid.NewGuid().ToString(), // Пример значения для id
+                    id = Guid.NewGuid(), // Пример значения для id
                     createTime = DateTime.Now.ToString(), // Пример значения для createTime
                     fullName = model.fullName,
                     birthDate = model.birthDate,
@@ -66,14 +66,14 @@ namespace Test.Controllers
                     Issuer = "HITS",
                     Subject = new ClaimsIdentity(new Claim[]
                     {
-                new Claim(ClaimTypes.Name, user.id) // Используем id пользователя в качестве имени в токене
+                new Claim(ClaimTypes.Name, user.id.ToString()) // Используем id пользователя в качестве имени в токене
                     })
                 };
                 var token = tokenHandler.CreateToken(tokenDescriptor);
                 var tokenString = tokenHandler.WriteToken(token);
 
                 // Возвращение токена в качестве ответа
-                return Ok(tokenString);
+                return Ok(new { token = tokenString });
             }
             catch (Exception ex)
             {
@@ -85,7 +85,7 @@ namespace Test.Controllers
 
         [HttpPost("login")]
         [ProducesResponseType(typeof(TokenResponse), 200)]
-        [ProducesResponseType(400)]
+        [ProducesResponseType(typeof(void), 400)]
         [ProducesResponseType(typeof(Response), 500)]
         public IActionResult login(LoginCredentials model)
         {
@@ -118,7 +118,7 @@ namespace Test.Controllers
                 Audience = "HITS",
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-            new Claim(ClaimTypes.Name, user.id) // Используем email пользователя в качестве имени в токене
+            new Claim(ClaimTypes.Name, user.id.ToString()) // Используем email пользователя в качестве имени в токене
                 })
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -130,8 +130,8 @@ namespace Test.Controllers
 
         [HttpGet("profile")]
         [Authorize] // Требуется аутентификация
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
+        [ProducesResponseType(typeof(UserDto),200)]
+        [ProducesResponseType(typeof(void), 401)]
         [ProducesResponseType(typeof(Response), 500)]
         public ActionResult<UserDto> GetProfile()
         {
@@ -152,7 +152,7 @@ namespace Test.Controllers
             string userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
 
             // Ищем пользователя в базе данных по идентификатору
-            var user = _context.Users.FirstOrDefault(u => u.id == userId);
+            var user = _context.Users.FirstOrDefault(u => u.id.ToString() == userId);
 
 
             if (user == null)
@@ -179,8 +179,9 @@ namespace Test.Controllers
 
         [HttpPut("profile")]
         [Authorize] // Требуется аутентификация
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
+        [ProducesResponseType(typeof(UserDto), 200)]
+        [ProducesResponseType(typeof(void), 400)]
+        [ProducesResponseType(typeof(void), 401)]
         [ProducesResponseType(typeof(Response), 500)]
         public async Task<IActionResult> UpdateProfile(UserEditModel updatedUserDto)
         {
@@ -201,7 +202,7 @@ namespace Test.Controllers
             string userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
 
             // Ищем пользователя в базе данных по идентификатору
-            var user = _context.Users.FirstOrDefault(u => u.id == userId);
+            var user = _context.Users.FirstOrDefault(u => u.id.ToString() == userId);
 
             if (user == null)
             {
@@ -225,8 +226,7 @@ namespace Test.Controllers
 
         [HttpPost("logout")]
         [Authorize] // Требуется аутентификация
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
+        [ProducesResponseType(typeof(void), 401)]
         [ProducesResponseType(typeof(Response), 500)]
         public IActionResult Logout()
         {
@@ -235,7 +235,7 @@ namespace Test.Controllers
             var tokenHandler = new JwtSecurityTokenHandler();
             var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
             string userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
-            var user = _context.Users.FirstOrDefault(u => u.id == userId);
+            var user = _context.Users.FirstOrDefault(u => u.id.ToString() == userId);
 
             //Логика удаления токена
 
