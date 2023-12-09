@@ -48,6 +48,7 @@ namespace Test.Controllers
             var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
             Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
             var user = _context.Users.FirstOrDefault(u => u.id == userId);
+
             var tagIds = postDto.tags; // Получение массива id тегов из postDto 
             var tags = new List<TagDto>(); // Создание списка для хранения объектов тегов 
             foreach (var tagId in tagIds)
@@ -151,7 +152,7 @@ namespace Test.Controllers
 
 
         [HttpGet]
-        [Authorize] // Требуется аутентификация
+        //[Authorize] // Требуется аутентификация
         [ProducesResponseType(typeof(PostPagedListDto), 200)]
         [ProducesResponseType(typeof(void), 400)]
         [ProducesResponseType(typeof(void), 401)]
@@ -230,6 +231,53 @@ namespace Test.Controllers
             };
 
             return Ok(result);
+        }
+
+
+        [HttpPost("{postId}/like")]
+        [Authorize]
+        [ProducesResponseType(typeof(void), 200)]
+        [ProducesResponseType(typeof(void), 400)]
+        [ProducesResponseType(typeof(void), 401)]
+        [ProducesResponseType(typeof(void), 404)]
+        [ProducesResponseType(typeof(Response), 500)]
+        public IActionResult AddLikeToPost(Guid postId)
+        {
+            // Получаем текущего пользователя
+
+            string authorizationHeader = Request.Headers["Authorization"];
+            string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+            Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+
+            // Проверяем, существует ли пост с указанным идентификатором
+            var post = _context.Posts.FirstOrDefault(p => p.id == postId);
+            if (post == null)
+            {
+                return StatusCode(404, new { status = "error", message = $"Post with id='{postId}' not found in  database" });
+            }
+
+            // Проверяем, был ли уже лайк от этого пользователя к этому посту
+            var existingLike = _context.PostLikes.FirstOrDefault(pl => pl.postId == postId && pl.userId == userId);
+            if (existingLike != null)
+            {
+                return StatusCode(400, new { status = "error", message = "You have already liked this post." });
+            }
+
+            // Добавляем лайк к посту
+            post.likes++;
+
+            var like = new PostLiked
+            {
+                postId = post.id,
+                userId = userId,
+            };
+            _context.PostLikes.Add(like);
+
+            _context.SaveChanges();
+
+            return Ok();
         }
 
     }

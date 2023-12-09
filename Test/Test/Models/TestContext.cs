@@ -19,6 +19,8 @@ namespace Test.Models
 
         public DbSet<PostTag> PostTags { get; set; }
 
+        public DbSet<PostLiked> PostLikes { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>().HasKey(x => x.id);
@@ -29,6 +31,8 @@ namespace Test.Models
 
             modelBuilder.Entity<PostTag>().HasKey(x => new { x.postId, x.tagId });
 
+            modelBuilder.Entity<PostLiked>().HasKey(x => new { x.userId, x.postId });
+
 
             modelBuilder.Entity<User>(options => { });
 
@@ -37,6 +41,8 @@ namespace Test.Models
             modelBuilder.Entity<TagDto>(options => { });
 
             modelBuilder.Entity<PostTag>(options => { });
+
+            modelBuilder.Entity<PostLiked>(options => { });
 
             base.OnModelCreating(modelBuilder);
 
