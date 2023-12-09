@@ -62,6 +62,6 @@ namespace Test.Models.DTO
 
         [Required]
 
-        public CommentDto comments { get; set; }
+        public List<CommentDto> comments { get; set; }
     }
 }

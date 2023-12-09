@@ -2,7 +2,7 @@
 {
     public class PostPagedListDto
     {
-        public PostDto posts { get; set; }
+        public List<PostDto> posts { get; set; }
 
         public PageInfoModel pagination { get; set; }
     }
