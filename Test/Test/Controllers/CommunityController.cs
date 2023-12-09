@@ -52,7 +52,7 @@ namespace Test.Controllers
             }
             //post.tags = _context.Tags.Where(t => t.PostDtoid == id).ToList();
 
-            var tagIds = _context.CommunityUsers.Where(pt => pt.communityId == community.id).Select(pt => pt.userId).ToList();
+            var tagIds = _context.CommunityUsers.Where(pt => pt.communityId == community.id && pt.role == CommunityRole.Administrator).Select(pt => pt.userId).ToList();
             var users = _context.Users.Where(t => tagIds.Contains(t.id)).ToList();
             var userDto = users.Select(user => new UserDto
             {

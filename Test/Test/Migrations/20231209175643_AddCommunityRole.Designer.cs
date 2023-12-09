@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Test.Models;
@@ -11,9 +12,11 @@ using Test.Models;
 namespace Test.Migrations
 {
     [DbContext(typeof(TestContext))]
-    partial class TestContextModelSnapshot : ModelSnapshot
+    [Migration("20231209175643_AddCommunityRole")]
+    partial class AddCommunityRole
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,9 +33,8 @@ namespace Test.Migrations
                     b.Property<Guid>("userId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("role")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("role")
+                        .HasColumnType("integer");
 
                     b.HasKey("communityId", "userId");
 
