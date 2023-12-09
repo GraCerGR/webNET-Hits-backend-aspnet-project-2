@@ -6,10 +6,10 @@ namespace Test.Models.DTO
     {
 
         [Required]
-        public string id { get; set; }
+        public Guid id { get; set; }
 
         [Required]
-        [DataType(DataType.Date)]
+        [DataType(DataType.DateTime)]
         public string createTime { get; set; }
 
         [Required]
@@ -17,15 +17,15 @@ namespace Test.Models.DTO
 
         public string content { get; set; }
 
-        [DataType(DataType.Date)]
+        [DataType(DataType.DateTime)]
         public string modifiedDate { get; set; }
 
-        [DataType(DataType.Date)]
+        [DataType(DataType.DateTime)]
         public string deleteDate { get; set; }
 
         [Required]
 
-        public string authorId { get; set; }
+        public Guid authorId { get; set; }
 
         [Required]
         [MinLength(1)]

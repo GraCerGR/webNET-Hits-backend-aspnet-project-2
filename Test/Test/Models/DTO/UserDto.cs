@@ -5,10 +5,10 @@ namespace Test.Models.DTO
     public class UserDto
     {
         [Required]
-        public string id { get; set; }
+        public Guid id { get; set; }
 
         [Required]
-        [DataType(DataType.Date)]
+        [DataType(DataType.DateTime)]
         public string createTime { get; set; }
 
         [Required]
@@ -19,8 +19,8 @@ namespace Test.Models.DTO
         public string? birthDate { get; set; }
 
         [Required]
-        [EnumDataType(typeof(Gender))]
-        public string gender { get; set; }
+        //[EnumDataType(typeof(Gender))]
+        public Gender gender { get; set; }
 
         [Required]
         [EmailAddress]

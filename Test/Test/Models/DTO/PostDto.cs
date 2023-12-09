@@ -9,10 +9,10 @@ namespace Test.Models.DTO
 {
     public class PostDto
     {
-        public string id { get; set; }
+        public Guid id { get; set; }
 
         [Required]
-        [DataType(DataType.Date)]
+        [DataType(DataType.DateTime)]
         public string createTime { get; set; }
 
         [Required]
@@ -32,18 +32,18 @@ namespace Test.Models.DTO
 
         [Required]
 
-        public string authorId { get; set; }
+        public Guid authorId { get; set; }
 
         [Required]
         [MinLength(1)]
 
         public string? author { get; set;}
 
-        public string? communityId { get; set; }
+        public Guid? communityId { get; set; }
 
         public string? communityName { get; set; }
 
-        public string? addressId { get; set; }
+        public Guid? addressId { get; set; }
 
         [Required]
         [DefaultValue(0)]

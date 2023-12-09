@@ -5,7 +5,7 @@ namespace Test.Models
     public class User
     {
         [Required]
-        public string id { get; set; }
+        public Guid id { get; set; }
 
         [Required]
         [DataType(DataType.Date)]
@@ -29,8 +29,8 @@ namespace Test.Models
         public string? birthDate { get; set; }
 
         [Required]
-        [EnumDataType(typeof(Gender))]
-        public string gender { get; set; }
+        //[EnumDataType(typeof(Gender))]
+        public Gender gender { get; set; }
 
         [Phone]
         public string? phoneNumber { get; set; }

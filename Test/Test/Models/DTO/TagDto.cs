@@ -6,7 +6,7 @@ namespace Test.Models.DTO
     {
         [Required]
 
-        public string id { get; set; }
+        public Guid id { get; set; }
 
         [Required]
         [DataType(DataType.DateTime)]

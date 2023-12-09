@@ -45,16 +45,16 @@ namespace Test.Controllers
             string bearerToken = authorizationHeader.Substring("Bearer ".Length);
             var tokenHandler = new JwtSecurityTokenHandler();
             var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
-            string userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
+            Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
             var user = _context.Users.FirstOrDefault(u => u.id == userId);
-            var tagIds = postDto.tags; // Получение массива id тегов из postDto
-            var tags = new List<TagDto>(); // Создание списка для хранения объектов тегов
+            var tagIds = postDto.tags; // Получение массива id тегов из postDto 
+            var tags = new List<TagDto>(); // Создание списка для хранения объектов тегов 
             foreach (var tagId in tagIds)
             {
-                var existingTag = _context.Tags.FirstOrDefault(t => t.id == tagId); // Поиск существующего тега по id
+                var existingTag = _context.Tags.FirstOrDefault(t => t.id == Guid.Parse(tagId)); // Поиск существующего тега по id 
                 if (existingTag != null)
                 {
-                    tags.Add(existingTag); // Использование существующего тега
+                    tags.Add(existingTag); // Использование существующего тега 
                 }
                 else
                 {
@@ -62,7 +62,7 @@ namespace Test.Controllers
                 }
             }
 
-            List<string> tagIds1 = new List<string>();
+            List<Guid> tagIds1 = new List<Guid>();
             foreach (TagDto tag in tags)
             {
                 tagIds1.Add(tag.id);
@@ -91,7 +91,7 @@ namespace Test.Controllers
             // Создаем новый объект поста на основе данных из запроса
             var post = new PostDto
             {
-                id = Guid.NewGuid().ToString(),
+                id = Guid.NewGuid(),
                 createTime = DateTime.Now.ToString(),
                 title = postDto.title,
                 description = postDto.description,
@@ -109,7 +109,7 @@ namespace Test.Controllers
             // Добавляем пост в контекст базы данных
             _context.Posts.Add(post);
 
-            foreach (string tagId in tagIds1)
+            foreach (Guid tagId in tagIds1)
             {
                 var tags_database = new PostTag
                 {
@@ -134,7 +134,7 @@ namespace Test.Controllers
         [ProducesResponseType(typeof(Response), 500)]
         public IActionResult GetPostId(string id)
         {
-            var post = _context.Posts.SingleOrDefault(p => p.id == id);
+            var post = _context.Posts.SingleOrDefault(p => p.id == Guid.Parse(id));
             if (post == null)
             {
                 return StatusCode(404, new { status = "error", message = $"Post with id='{id}' not found in  database" });
@@ -170,7 +170,8 @@ namespace Test.Controllers
 
             if (tags != null && tags.Length > 0)
             {
-                var postIdsWithTags = _context.PostTags.Where(pt => tags.Contains(pt.tagId)).Select(pt => pt.postId).Distinct();
+                var tagGuids = tags.Select(Guid.Parse).ToArray();
+                var postIdsWithTags = _context.PostTags.Where(pt => tagGuids.Contains(pt.tagId)).Select(pt => pt.postId).Distinct();
                 posts = posts.Where(p => postIdsWithTags.Contains(p.id)).ToList();
             }
 

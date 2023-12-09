@@ -23,7 +23,7 @@ namespace Test.Models.DTO
         [MaxLength(1000)]
         public string? image { get; set; }
 
-        public string? addressId { get; set; }
+        public Guid? addressId { get; set; }
 
         [Required]
         [MinLength(1)]

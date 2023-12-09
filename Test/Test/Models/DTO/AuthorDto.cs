@@ -12,14 +12,14 @@ namespace Test.Models.DTO
         public string? birthDate { get; set; }
 
         [Required]
-        [EnumDataType(typeof(Gender))]
-        public string gender { get; set; }
+        //[EnumDataType(typeof(Gender))]
+        public Gender gender { get; set; }
 
         public int posts { get; set; }
 
         public int likes { get; set; }
 
-        [DataType(DataType.Date)]
+        [DataType(DataType.DateTime)]
         public string created { get; set; }
     }
 }

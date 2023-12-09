@@ -5,10 +5,10 @@ namespace Test.Models.DTO
     public class PostTag
     {
         [Required]
-        public string postId { get; set; }
+        public Guid postId { get; set; }
 
         [Required]
-        public string tagId { get; set; }
+        public Guid tagId { get; set; }
 
     }
 }

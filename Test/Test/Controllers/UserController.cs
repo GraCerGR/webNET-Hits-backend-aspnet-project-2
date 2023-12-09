@@ -38,7 +38,7 @@ namespace Test.Controllers
                 // Создаем новый объект пользователя на основе данных из модели UserRegisterModel
                 User user = new User
                 {
-                    id = Guid.NewGuid().ToString(), // Пример значения для id
+                    id = Guid.NewGuid(), // Пример значения для id
                     createTime = DateTime.Now.ToString(), // Пример значения для createTime
                     fullName = model.fullName,
                     birthDate = model.birthDate,
@@ -66,7 +66,7 @@ namespace Test.Controllers
                     Issuer = "HITS",
                     Subject = new ClaimsIdentity(new Claim[]
                     {
-                new Claim(ClaimTypes.Name, user.id) // Используем id пользователя в качестве имени в токене
+                new Claim(ClaimTypes.Name, user.id.ToString()) // Используем id пользователя в качестве имени в токене
                     })
                 };
                 var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -118,7 +118,7 @@ namespace Test.Controllers
                 Audience = "HITS",
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-            new Claim(ClaimTypes.Name, user.id) // Используем email пользователя в качестве имени в токене
+            new Claim(ClaimTypes.Name, user.id.ToString()) // Используем email пользователя в качестве имени в токене
                 })
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -152,7 +152,7 @@ namespace Test.Controllers
             string userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
 
             // Ищем пользователя в базе данных по идентификатору
-            var user = _context.Users.FirstOrDefault(u => u.id == userId);
+            var user = _context.Users.FirstOrDefault(u => u.id.ToString() == userId);
 
 
             if (user == null)
@@ -202,7 +202,7 @@ namespace Test.Controllers
             string userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
 
             // Ищем пользователя в базе данных по идентификатору
-            var user = _context.Users.FirstOrDefault(u => u.id == userId);
+            var user = _context.Users.FirstOrDefault(u => u.id.ToString() == userId);
 
             if (user == null)
             {
@@ -235,7 +235,7 @@ namespace Test.Controllers
             var tokenHandler = new JwtSecurityTokenHandler();
             var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
             string userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
-            var user = _context.Users.FirstOrDefault(u => u.id == userId);
+            var user = _context.Users.FirstOrDefault(u => u.id.ToString() == userId);
 
             //Логика удаления токена
 
