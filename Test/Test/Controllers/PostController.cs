@@ -280,5 +280,44 @@ namespace Test.Controllers
             return Ok();
         }
 
+        [HttpDelete("{postId}/like")]
+        [Authorize]
+        [ProducesResponseType(typeof(void), 200)]
+        [ProducesResponseType(typeof(void), 400)]
+        [ProducesResponseType(typeof(void), 401)]
+        [ProducesResponseType(typeof(void), 404)]
+        [ProducesResponseType(typeof(Response), 500)]
+        public IActionResult DeleteLikeToPost(Guid postId)
+        {
+
+            string authorizationHeader = Request.Headers["Authorization"];
+            string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+            Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+
+            // Проверяем, существует ли пост с указанным идентификатором
+            var post = _context.Posts.FirstOrDefault(p => p.id == postId);
+            if (post == null)
+            {
+                return StatusCode(404, new { status = "error", message = $"Post with id='{postId}' not found in  database" });
+            }
+
+            // Проверяем, был ли уже лайк от этого пользователя к этому посту
+            var existingLike = _context.PostLikes.FirstOrDefault(pl => pl.postId == postId && pl.userId == userId);
+            if (existingLike == null)
+            {
+                return StatusCode(400, new { status = "error", message = "You havn't liked this post yet." });
+            }
+
+            post.likes--;
+
+            _context.PostLikes.Remove(existingLike);
+
+            _context.SaveChanges();
+
+            return Ok();
+        }
+
     }
 }
