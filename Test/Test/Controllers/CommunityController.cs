@@ -72,7 +72,7 @@ namespace Test.Controllers
             return Ok(community);
         }
 
-        [HttpPost]
+        [HttpPost("{id}/post")]
         [Authorize] // Требуется аутентификация]
         [ProducesResponseType(typeof(Guid), 200)]
         [ProducesResponseType(typeof(void), 400)]
@@ -147,7 +147,6 @@ namespace Test.Controllers
                 likes = 0,
                 hasLike = false,
                 commentsCount = 0,
-                //tags = tags,
             };
 
             // Добавляем пост в контекст базы данных
@@ -166,7 +165,7 @@ namespace Test.Controllers
 
 
             // Возвращаем созданный пост
-            return Ok(/*post.id*/new { var = user, userAdmin });
+            return Ok(post.id);
         }
 
         [HttpGet("my")]
@@ -193,6 +192,38 @@ namespace Test.Controllers
             var communityUsers = _context.CommunityUsers.Where(cu => cu.userId == user.id).ToList();
 
             return Ok(communityUsers);
+        }
+
+        [HttpGet("{id}/role")]
+        [Authorize]
+        [ProducesResponseType(typeof(string), 200)]
+        [ProducesResponseType(typeof(Response), 404)]
+        [ProducesResponseType(typeof(Response), 500)]
+        public IActionResult GetRolePostId(Guid id)
+        {
+            string authorizationHeader = Request.Headers["Authorization"];
+            string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+            Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+            var user = _context.Users.FirstOrDefault(u => u.id == userId);
+
+            if (user == null)
+            {
+                return StatusCode(404, new { status = "error", message = "User not found" });
+            }
+
+
+
+            var community = _context.Communities.SingleOrDefault(p => p.id == Guid.Parse(id.ToString()));
+            if (community == null)
+            {
+                return StatusCode(404, new { status = "error", message = $"Community with id='{id}' not found in  database" });
+            }
+
+            var role = _context.CommunityUsers.FirstOrDefault(r => r.userId == user.id && r.communityId == id)?.role;
+
+            return role != null ? Ok(role) : Ok(Enumerable.Empty<string>());
         }
     }
 }
