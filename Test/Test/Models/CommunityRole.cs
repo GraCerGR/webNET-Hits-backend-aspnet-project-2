@@ -1,12 +1,13 @@
-﻿using System.Runtime.Serialization;
+﻿using System.Data;
+using System.Drawing;
 using System.Text.Json.Serialization;
 
 namespace Test.Models
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum Gender
+    public enum CommunityRole
     {
-        Male,
-        Female
+        Administrator = 0,
+        Subscriber = 1
     }
 }

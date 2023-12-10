@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Test.Models;
@@ -11,9 +12,11 @@ using Test.Models;
 namespace Test.Migrations
 {
     [DbContext(typeof(TestContext))]
-    partial class TestContextModelSnapshot : ModelSnapshot
+    [Migration("20231209180700_AddCommunityRoleA")]
+    partial class AddCommunityRoleA
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -36,7 +39,7 @@ namespace Test.Migrations
 
                     b.HasKey("communityId", "userId");
 
-                    b.ToTable("CommunityUsers", (string)null);
+                    b.ToTable("CommunityUsers");
                 });
 
             modelBuilder.Entity("Test.Models.DTO.CommunityFullDto", b =>
@@ -65,7 +68,7 @@ namespace Test.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("Communities", (string)null);
+                    b.ToTable("Communities");
                 });
 
             modelBuilder.Entity("Test.Models.DTO.PostDto", b =>
@@ -119,7 +122,7 @@ namespace Test.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("Posts", (string)null);
+                    b.ToTable("Posts");
                 });
 
             modelBuilder.Entity("Test.Models.DTO.PostTag", b =>
@@ -132,7 +135,7 @@ namespace Test.Migrations
 
                     b.HasKey("postId", "tagId");
 
-                    b.ToTable("PostTags", (string)null);
+                    b.ToTable("PostTags");
                 });
 
             modelBuilder.Entity("Test.Models.DTO.TagDto", b =>
@@ -156,7 +159,7 @@ namespace Test.Migrations
 
                     b.HasIndex("PostDtoid");
 
-                    b.ToTable("Tags", (string)null);
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("Test.Models.DTO.UserDto", b =>
@@ -193,7 +196,7 @@ namespace Test.Migrations
 
                     b.HasIndex("CommunityFullDtoid");
 
-                    b.ToTable("UserDto", (string)null);
+                    b.ToTable("UserDto");
                 });
 
             modelBuilder.Entity("Test.Models.PostLiked", b =>
@@ -206,7 +209,7 @@ namespace Test.Migrations
 
                     b.HasKey("userId", "postId");
 
-                    b.ToTable("PostLikes", (string)null);
+                    b.ToTable("PostLikes");
                 });
 
             modelBuilder.Entity("Test.Models.User", b =>
@@ -249,7 +252,7 @@ namespace Test.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Test.Models.DTO.TagDto", b =>
