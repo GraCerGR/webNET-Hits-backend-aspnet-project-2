@@ -225,5 +225,89 @@ namespace Test.Controllers
 
             return role != null ? Ok(role) : Ok(Enumerable.Empty<string>());
         }
+
+
+        [HttpPost("{id}/subscribe")]
+        [Authorize]
+        [ProducesResponseType(typeof(void), 200)]
+        [ProducesResponseType(typeof(void), 400)]
+        [ProducesResponseType(typeof(void), 401)]
+        [ProducesResponseType(typeof(void), 404)]
+        [ProducesResponseType(typeof(Response), 500)]
+        public IActionResult AddSubscribeToPost(Guid id)
+        {
+            // Получаем текущего пользователя
+
+            string authorizationHeader = Request.Headers["Authorization"];
+            string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+            Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+
+            var community = _context.Communities.FirstOrDefault(p => p.id == id);
+            if (community == null)
+            {
+                return StatusCode(404, new { status = "error", message = $"Community with id='{id}' not found in  database" });
+            }
+
+            var existingSub = _context.CommunityUsers.FirstOrDefault(s => s.communityId == id && s.userId == userId);
+            if (existingSub != null)
+            {
+                return StatusCode(400, new { status = "error", message = "You have already subscribe or you are administrator this community." });
+            }
+
+            var communityUser = new CommunityUserDto
+            {
+                communityId = community.id,
+                userId = userId,
+                role = CommunityRole.Subscriber
+            };
+
+            community.subscribersCount++;
+
+            _context.CommunityUsers.Add(communityUser);
+
+            _context.SaveChanges();
+
+            return Ok();
+        }
+
+        [HttpDelete("{id}/unsubscribe")]
+        [Authorize]
+        [ProducesResponseType(typeof(void), 200)]
+        [ProducesResponseType(typeof(void), 400)]
+        [ProducesResponseType(typeof(void), 401)]
+        [ProducesResponseType(typeof(void), 404)]
+        [ProducesResponseType(typeof(Response), 500)]
+        public IActionResult DeleteLikeToPost(Guid id)
+        {
+
+            string authorizationHeader = Request.Headers["Authorization"];
+            string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+            Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+
+            var community = _context.Communities.FirstOrDefault(p => p.id == id);
+            if (community == null)
+            {
+                return StatusCode(404, new { status = "error", message = $"Community with id='{id}' not found in  database" });
+            }
+
+            // Проверяем, был ли уже лайк от этого пользователя к этому посту
+            var existingSub = _context.CommunityUsers.FirstOrDefault(s => s.communityId == id && s.userId == userId && s.role == CommunityRole.Subscriber);
+            if (existingSub == null)
+            {
+                return StatusCode(400, new { status = "error", message = "You havn't subscribe on this community yet." });
+            }
+
+            community.subscribersCount--;
+
+            _context.CommunityUsers.Remove(existingSub);
+
+            _context.SaveChanges();
+
+            return Ok();
+        }
     }
 }
