@@ -265,6 +265,18 @@ namespace Test.Controllers
                 return StatusCode(400, new { status = "error", message = "You have already liked this post." });
             }
 
+
+            var community = _context.Communities.FirstOrDefault(c => c.id == post.communityId);
+            if (community != null && community.isClosed)
+            {
+                var userSubscribed = _context.CommunityUsers.Any(c => c.userId == userId && c.communityId == post.communityId);
+                if (!userSubscribed)
+                {
+                    return StatusCode(403, new { status = "error", message = "Community is closed" });
+                }
+            }
+
+
             // Добавляем лайк к посту
             post.likes++;
 
