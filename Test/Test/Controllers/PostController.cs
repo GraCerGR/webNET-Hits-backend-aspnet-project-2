@@ -129,7 +129,7 @@ namespace Test.Controllers
 
         [HttpGet("{id}")]
         //[Authorize] // Требуется аутентификация
-        [ProducesResponseType(typeof(PostFullDto), 200)] //нужно FullPostDto!!!!!!!!!!!!!!!!!
+        [ProducesResponseType(typeof(PostFullDto), 200)]
         [ProducesResponseType(typeof(void), 400)]
         [ProducesResponseType(typeof(Response), 401)]
         [ProducesResponseType(typeof(Response), 404)]
@@ -160,6 +160,15 @@ namespace Test.Controllers
         [ProducesResponseType(typeof(Response), 500)]
         public IActionResult GetPosts([FromQuery] string?[] tags, [FromQuery] string? author, int? min, int? max, PostSorting? sorting, [Range(1, int.MaxValue), DefaultValue(1)] int? page, [Range(1, int.MaxValue), DefaultValue(5)] int? size)
         {
+            Guid userId = Guid.Empty;
+            if (User.Identity.IsAuthenticated)
+            {
+                string authorizationHeader = Request.Headers["Authorization"];
+                string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+                userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+            }
             var posts = _context.Posts.AsQueryable();
 
             if (!string.IsNullOrEmpty(author))
@@ -186,11 +195,22 @@ namespace Test.Controllers
 
             var postList = posts.ToList();
 
-            foreach (PostDto post in postList)
+            for (int i = postList.Count - 1; i >= 0; i--)
             {
+                var post = postList[i];
                 var tagIds = _context.PostTags.Where(pt => pt.postId == post.id).Select(pt => pt.tagId).ToList();
                 var tag = _context.Tags.Where(t => tagIds.Contains(t.id)).ToList();
                 post.tags = tag;
+
+                var community = _context.Communities.FirstOrDefault(c => c.id == post.communityId && c.isClosed);
+                if (community != null)
+                {
+                    var userSubscribed = _context.CommunityUsers.Any(cu => cu.userId == userId && cu.communityId == post.communityId);
+                    if (!userSubscribed)
+                    {
+                        postList.RemoveAt(i);
+                    }
+                }
             }
 
             if (sorting.HasValue)
