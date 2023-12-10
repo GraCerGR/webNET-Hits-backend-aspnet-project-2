@@ -36,7 +36,7 @@ namespace Test.Migrations
 
                     b.HasKey("communityId", "userId");
 
-                    b.ToTable("CommunityUsers");
+                    b.ToTable("CommunityUsers", (string)null);
                 });
 
             modelBuilder.Entity("Test.Models.DTO.CommunityFullDto", b =>
@@ -65,7 +65,7 @@ namespace Test.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("Communities");
+                    b.ToTable("Communities", (string)null);
                 });
 
             modelBuilder.Entity("Test.Models.DTO.PostDto", b =>
@@ -119,7 +119,7 @@ namespace Test.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("Posts");
+                    b.ToTable("Posts", (string)null);
                 });
 
             modelBuilder.Entity("Test.Models.DTO.PostTag", b =>
@@ -132,7 +132,7 @@ namespace Test.Migrations
 
                     b.HasKey("postId", "tagId");
 
-                    b.ToTable("PostTags");
+                    b.ToTable("PostTags", (string)null);
                 });
 
             modelBuilder.Entity("Test.Models.DTO.TagDto", b =>
@@ -156,7 +156,7 @@ namespace Test.Migrations
 
                     b.HasIndex("PostDtoid");
 
-                    b.ToTable("Tags");
+                    b.ToTable("Tags", (string)null);
                 });
 
             modelBuilder.Entity("Test.Models.DTO.UserDto", b =>
@@ -193,7 +193,7 @@ namespace Test.Migrations
 
                     b.HasIndex("CommunityFullDtoid");
 
-                    b.ToTable("UserDto");
+                    b.ToTable("UserDto", (string)null);
                 });
 
             modelBuilder.Entity("Test.Models.PostLiked", b =>
@@ -206,7 +206,7 @@ namespace Test.Migrations
 
                     b.HasKey("userId", "postId");
 
-                    b.ToTable("PostLikes");
+                    b.ToTable("PostLikes", (string)null);
                 });
 
             modelBuilder.Entity("Test.Models.User", b =>
@@ -249,7 +249,7 @@ namespace Test.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("Test.Models.DTO.TagDto", b =>

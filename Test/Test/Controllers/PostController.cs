@@ -34,7 +34,7 @@ namespace Test.Controllers
 
         [HttpPost]
         [Authorize] // Требуется аутентификация
-        [ProducesResponseType(typeof(UserDto), 200)]
+        [ProducesResponseType(typeof(Guid), 200)]
         [ProducesResponseType(typeof(void), 400)]
         [ProducesResponseType(typeof(Response), 401)]
         [ProducesResponseType(typeof(Response), 404)]

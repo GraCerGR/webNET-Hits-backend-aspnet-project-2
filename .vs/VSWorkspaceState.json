@@ -7,6 +7,6 @@
     "\\Test\\Test\\Models",
     "\\Test\\Test\\Models\\DTO"
   ],
-  "SelectedNode": "\\Test\\Test\\Models\\DTO\\UserDto.cs",
+  "SelectedNode": "\\Test\\Test\\Controllers\\PostController.cs",
   "PreviewInSolutionExplorer": false
 }
