@@ -23,7 +23,7 @@ namespace Test.Models
 
         public DbSet<CommunityFullDto> Communities { get; set; }
 
-        public DbSet<CommunityUser> CommunityUsers { get; set; }
+        public DbSet<CommunityUserDto> CommunityUsers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -39,7 +39,7 @@ namespace Test.Models
 
             modelBuilder.Entity<CommunityFullDto>().HasKey(x => x.id);
 
-            modelBuilder.Entity<CommunityUser>().HasKey(x => new { x.communityId, x.userId });
+            modelBuilder.Entity<CommunityUserDto>().HasKey(x => new { x.communityId, x.userId });
 
 
             modelBuilder.Entity<User>(options => { });
@@ -54,7 +54,7 @@ namespace Test.Models
 
             modelBuilder.Entity<CommunityFullDto>(options => { });
 
-            modelBuilder.Entity<CommunityUser>(options => { });
+            modelBuilder.Entity<CommunityUserDto>(options => { });
 
             base.OnModelCreating(modelBuilder);
 

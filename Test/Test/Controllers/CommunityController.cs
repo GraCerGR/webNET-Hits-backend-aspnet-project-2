@@ -80,7 +80,7 @@ namespace Test.Controllers
         [ProducesResponseType(typeof(Response), 403)]
         [ProducesResponseType(typeof(Response), 404)]
         [ProducesResponseType(typeof(Response), 500)]
-        public IActionResult CreatePostInCommunity([Required]Guid id, CreatePostDto postDto)
+        public IActionResult CreatePostInCommunity([Required] Guid id, CreatePostDto postDto)
         {
             // Получаем идентификатор авторизованного пользователя из токена
             string authorizationHeader = Request.Headers["Authorization"];
@@ -167,6 +167,32 @@ namespace Test.Controllers
 
             // Возвращаем созданный пост
             return Ok(/*post.id*/new { var = user, userAdmin });
+        }
+
+        [HttpGet("my")]
+        [Authorize] // Требуется аутентификация]
+        [ProducesResponseType(typeof(CommunityUserDto), 200)]
+        [ProducesResponseType(typeof(void), 401)]
+        [ProducesResponseType(typeof(Response), 404)]
+        [ProducesResponseType(typeof(Response), 500)]
+        public IActionResult GetMyCommunity()
+        {
+            // Получаем идентификатор авторизованного пользователя из токена
+            string authorizationHeader = Request.Headers["Authorization"];
+            string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+            Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+            var user = _context.Users.FirstOrDefault(u => u.id == userId);
+
+            if (user == null)
+            {
+                return StatusCode(404, new { status = "error", message = "User not found" });
+            }
+
+            var communityUsers = _context.CommunityUsers.Where(cu => cu.userId == user.id).ToList();
+
+            return Ok(communityUsers);
         }
     }
 }
