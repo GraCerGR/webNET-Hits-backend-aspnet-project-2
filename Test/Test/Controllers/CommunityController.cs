@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
@@ -308,6 +309,98 @@ namespace Test.Controllers
             _context.SaveChanges();
 
             return Ok();
+        }
+
+        [HttpGet("{id}/post")]
+        //[Authorize] // Требуется аутентификация
+        [ProducesResponseType(typeof(PostPagedListDto), 200)]
+        [ProducesResponseType(typeof(void), 400)]
+        [ProducesResponseType(typeof(void), 401)]
+        [ProducesResponseType(typeof(void), 404)]
+        [ProducesResponseType(typeof(Response), 500)]
+        public IActionResult GetPosts([Required] Guid id, [FromQuery] string?[] tags, PostSorting? sorting, [Range(1, int.MaxValue), DefaultValue(1)] int? page, [Range(1, int.MaxValue), DefaultValue(5)] int? size)
+        {
+            Guid userId = Guid.Empty;
+            if (User.Identity.IsAuthenticated)
+            {
+                string authorizationHeader = Request.Headers["Authorization"];
+                string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+                userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+            }
+
+            var community = _context.Communities.FirstOrDefault(p => p.id == id);
+            if (community == null)
+            {
+                return StatusCode(404, new { status = "error", message = $"Community with id='{id}' not found in  database" });
+            }
+
+            if (community.isClosed)
+            {
+                var communityUser = _context.CommunityUsers.FirstOrDefault(cu => cu.userId == userId && cu.communityId == id);
+                if (communityUser == null)
+                {
+                    return StatusCode(403, new { status = "error", message = $"Access to closed community with id='{id}' is forbidden" });
+                }
+            }
+
+            var posts = _context.Posts.Where(p => p.communityId == id).AsQueryable();
+
+            if (tags != null && tags.Length > 0)
+            {
+                var tagGuids = tags.Select(Guid.Parse).ToArray();
+                var postIdsWithTags = _context.PostTags.Where(pt => tagGuids.Contains(pt.tagId)).Select(pt => pt.postId).Distinct();
+                posts = posts.Where(p => postIdsWithTags.Contains(p.id));
+            }
+
+            var postList = posts.ToList();
+
+            foreach (PostDto post in postList)
+            {
+                var tagIds = _context.PostTags.Where(pt => pt.postId == post.id).Select(pt => pt.tagId).ToList();
+                var tag = _context.Tags.Where(t => tagIds.Contains(t.id)).ToList();
+                post.tags = tag;
+            }
+
+            if (sorting.HasValue)
+            {
+                switch (sorting.Value)
+                {
+                    case PostSorting.CreateDesc:
+                        postList = postList.OrderByDescending(p => p.createTime).ToList();
+                        break;
+                    case PostSorting.CreateAsc:
+                        postList = postList.OrderBy(p => p.createTime).ToList();
+                        break;
+                    case PostSorting.LikeAsc:
+                        postList = postList.OrderBy(p => p.likes).ToList();
+                        break;
+                    case PostSorting.LikeDesc:
+                        postList = postList.OrderByDescending(p => p.likes).ToList();
+                        break;
+                }
+            }
+
+            var totalCount = postList.Count();
+
+            if (size.HasValue && page.HasValue)
+            {
+                postList = postList.Skip((page.Value - 1) * size.Value).Take(size.Value).ToList();
+            }
+
+            var result = new PostPagedListDto
+            {
+                posts = postList,
+                pagination = new PageInfoModel
+                {
+                    size = size ?? 0,
+                    count = (int)Math.Ceiling((double)totalCount / size.Value),
+                    current = page ?? 0
+                }
+            };
+
+            return Ok(result);
         }
     }
 }
