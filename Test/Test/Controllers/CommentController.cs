@@ -133,5 +133,51 @@ namespace Test.Controllers
 
             return Ok(comment);
         }
+
+        [HttpDelete("{id}")]
+        [Authorize]
+        [ProducesResponseType(typeof(CommentDto), 200)]
+        [ProducesResponseType(typeof(void), 400)]
+        [ProducesResponseType(typeof(void), 401)]
+        [ProducesResponseType(typeof(void), 403)]
+        [ProducesResponseType(typeof(void), 404)]
+        [ProducesResponseType(typeof(Response), 500)]
+        public async Task<ActionResult> DeleteComment(Guid id)
+        {
+            string authorizationHeader = Request.Headers["Authorization"];
+            string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+            Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+            var user = _context.Users.FirstOrDefault(u => u.id == userId);
+
+            if (user == null)
+            {
+                return StatusCode(404, new { status = "error", message = "User not found" });
+            }
+
+            var comment = await _context.Comments.FindAsync(id);
+            if (comment == null)
+            {
+                return StatusCode(404, new { status = "error", message = $"Comment with id='{id}' not found in database" });
+            }
+
+            if (user.id != comment.authorId)
+            {
+                return StatusCode(404, new { status = "error", message = "This is not your comment" });
+            }
+
+            comment.content = "";
+            comment.deleteDate = DateTime.Now.ToString();
+
+            Guid postId = _context.PostComment.FirstOrDefault(pt => pt.commentId == id).postId;
+            var post = await _context.Posts.FindAsync(postId);
+            post.commentsCount--;
+
+            _context.Comments.Update(comment);
+            await _context.SaveChangesAsync();
+
+            return Ok(comment);
+        }
     }
 }
