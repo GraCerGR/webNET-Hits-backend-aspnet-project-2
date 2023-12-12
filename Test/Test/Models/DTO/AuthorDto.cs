@@ -9,17 +9,17 @@ namespace Test.Models.DTO
         public string fullName { get; set; }
 
         [DataType(DataType.DateTime)]
-        public string? birthDate { get; set; }
+        public string birthDate { get; set; }
 
         [Required]
         //[EnumDataType(typeof(Gender))]
-        public Gender gender { get; set; }
+        public Gender? gender { get; set; }
 
-        public int posts { get; set; }
+        public int? posts { get; set; }
 
-        public int likes { get; set; }
+        public int? likes { get; set; }
 
         [DataType(DataType.DateTime)]
-        public string created { get; set; }
+        public string? created { get; set; }
     }
 }

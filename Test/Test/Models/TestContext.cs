@@ -25,6 +25,12 @@ namespace Test.Models
 
         public DbSet<CommunityUserDto> CommunityUsers { get; set; }
 
+        public DbSet<CommentDto> Comments { get; set; }
+
+        public DbSet<CommentComment> CommentComment { get; set; }
+
+        public DbSet<PostComment> PostComment { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>().HasKey(x => x.id);
@@ -41,6 +47,12 @@ namespace Test.Models
 
             modelBuilder.Entity<CommunityUserDto>().HasKey(x => new { x.communityId, x.userId });
 
+            modelBuilder.Entity<CommentDto>().HasKey(x => x.id);
+
+            modelBuilder.Entity<CommentComment>().HasKey(x => new { x.commentId1, x.commentId2 });
+
+            modelBuilder.Entity<PostComment>().HasKey(x => new { x.postId, x.commentId });
+
 
             modelBuilder.Entity<User>(options => { });
 
@@ -55,6 +67,13 @@ namespace Test.Models
             modelBuilder.Entity<CommunityFullDto>(options => { });
 
             modelBuilder.Entity<CommunityUserDto>(options => { });
+
+            modelBuilder.Entity<CommentDto>(options => { });
+
+            modelBuilder.Entity<CommentComment>(options => { });
+
+            modelBuilder.Entity<PostComment>(options => { });
+
 
             base.OnModelCreating(modelBuilder);
 

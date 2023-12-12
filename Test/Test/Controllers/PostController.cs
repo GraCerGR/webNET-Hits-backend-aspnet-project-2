@@ -134,9 +134,19 @@ namespace Test.Controllers
         [ProducesResponseType(typeof(Response), 401)]
         [ProducesResponseType(typeof(Response), 404)]
         [ProducesResponseType(typeof(Response), 500)]
-        public IActionResult GetPostId(string id)
+        public IActionResult GetPostId(Guid id)
         {
-            var post = _context.Posts.SingleOrDefault(p => p.id == Guid.Parse(id));
+            Guid userId = Guid.Empty;
+            if (User.Identity.IsAuthenticated)
+            {
+                string authorizationHeader = Request.Headers["Authorization"];
+                string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+                userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+            }
+
+            var post = _context.Posts.SingleOrDefault(p => p.id == Guid.Parse(id.ToString()));
             if (post == null)
             {
                 return StatusCode(404, new { status = "error", message = $"Post with id='{id}' not found in  database" });
@@ -147,7 +157,33 @@ namespace Test.Controllers
             var tags = _context.Tags.Where(t => tagIds.Contains(t.id)).ToList();
             post.tags = tags;
 
-            return Ok(post);
+            var commentIds = _context.PostComment.Where(pt => pt.postId == post.id).Select(pt => pt.commentId).ToList();
+            var nestedCommentIds = _context.CommentComment.Select(cc => cc.commentId1).ToList();
+            var comments = _context.Comments
+                .Where(c => commentIds.Contains(c.id))
+                .Except(_context.Comments.Where(c => nestedCommentIds.Contains(c.id)))
+                .ToList();
+
+            var postFull = new PostFullDto
+            {
+                id = post.id,
+                createTime = post.createTime,
+                title = post.title,
+                description = post.description,
+                readingTime = post.readingTime,
+                image = post.image,
+                authorId = post.authorId,
+                author = post.author,
+                addressId = post.addressId,
+                likes = post.likes,
+                hasLike = post.hasLike,
+                commentsCount = post.commentsCount,
+                tags = post.tags,
+                comments = comments,
+            };
+
+
+            return Ok(postFull);
         }
 
 

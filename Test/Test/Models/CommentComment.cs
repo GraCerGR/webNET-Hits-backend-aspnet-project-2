@@ -2,13 +2,12 @@
 
 namespace Test.Models
 {
-    public class PostLiked
+    public class CommentComment
     {
         [Required]
-        public Guid userId { get; set; }
+        public Guid commentId1 { get; set; }
 
         [Required]
-        public Guid postId { get; set; }
-
+        public Guid commentId2 { get; set; }
     }
 }

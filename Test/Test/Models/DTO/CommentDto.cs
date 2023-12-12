@@ -18,10 +18,10 @@ namespace Test.Models.DTO
         public string content { get; set; }
 
         [DataType(DataType.DateTime)]
-        public string modifiedDate { get; set; }
+        public string? modifiedDate { get; set; }
 
         [DataType(DataType.DateTime)]
-        public string deleteDate { get; set; }
+        public string? deleteDate { get; set; }
 
         [Required]
 
