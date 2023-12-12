@@ -22,6 +22,25 @@ namespace Test.Controllers
             _context = context;
         }
 
+        [HttpGet("{id}/tree")]
+        [ProducesResponseType(typeof(List<CommentDto>), 200)]
+        [ProducesResponseType(typeof(void), 400)]
+        [ProducesResponseType(typeof(void), 404)]
+        [ProducesResponseType(typeof(Response), 500)]
+        public ActionResult<List<CommentDto>> GetNestedComments(Guid id)
+        {
+            var parentComment = _context.Comments.FirstOrDefault(c => c.id == id);
+            if (parentComment == null)
+            {
+                return StatusCode(404, new { status = "error", message = $"Parent comment with id='{id}' not found" });
+            }
+
+            var childComments = _context.CommentComment
+                .Where(cc => cc.commentId2 == id).Join(_context.Comments, cc => cc.commentId1, c => c.id, (cc, c) => c).ToList();
+
+            return Ok(childComments);
+        }
+
         [HttpPost("{id}/comment")]
         [Authorize]
         [ProducesResponseType(typeof(CommentDto), 200)]
