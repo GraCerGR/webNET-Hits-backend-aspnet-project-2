@@ -167,7 +167,7 @@ namespace Test.Controllers
                 return StatusCode(404, new { status = "error", message = "This is not your comment" });
             }
 
-            comment.content = "";
+            comment.content = " ";
             comment.deleteDate = DateTime.Now.ToString();
 
             Guid postId = _context.PostComment.FirstOrDefault(pt => pt.commentId == id).postId;
