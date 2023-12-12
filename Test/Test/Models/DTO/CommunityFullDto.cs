@@ -16,7 +16,7 @@ namespace Test.Models.DTO
         [MinLength(1)]
         public string name { get; set; }
 
-        public string description { get; set; }
+        public string? description { get; set; }
 
         [Required]
         [DefaultValue(false)]

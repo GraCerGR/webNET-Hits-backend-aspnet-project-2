@@ -134,9 +134,9 @@ namespace Test.Controllers
         [ProducesResponseType(typeof(Response), 401)]
         [ProducesResponseType(typeof(Response), 404)]
         [ProducesResponseType(typeof(Response), 500)]
-        public IActionResult GetPostId(string id)
+        public IActionResult GetPostId(Guid id)
         {
-            var post = _context.Posts.SingleOrDefault(p => p.id == Guid.Parse(id));
+            var post = _context.Posts.SingleOrDefault(p => p.id == Guid.Parse(id.ToString()));
             if (post == null)
             {
                 return StatusCode(404, new { status = "error", message = $"Post with id='{id}' not found in  database" });

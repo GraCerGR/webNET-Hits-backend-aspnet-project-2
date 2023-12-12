@@ -9,6 +9,6 @@ namespace Test.Models.DTO
         [MinLength(1)]
         public string content { get; set; }
 
-        public Guid parentId { get; set; }
+        public Guid? parentId { get; set; }
     }
 }
