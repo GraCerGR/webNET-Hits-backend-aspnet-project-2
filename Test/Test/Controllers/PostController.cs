@@ -136,6 +136,16 @@ namespace Test.Controllers
         [ProducesResponseType(typeof(Response), 500)]
         public IActionResult GetPostId(Guid id)
         {
+            Guid userId = Guid.Empty;
+            if (User.Identity.IsAuthenticated)
+            {
+                string authorizationHeader = Request.Headers["Authorization"];
+                string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+                userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+            }
+
             var post = _context.Posts.SingleOrDefault(p => p.id == Guid.Parse(id.ToString()));
             if (post == null)
             {
