@@ -64,21 +64,22 @@ namespace Test.Controllers
                     Expires = DateTime.UtcNow.AddHours(1),
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
                     Issuer = "HITS",
+                    Audience = "HITS",
                     Subject = new ClaimsIdentity(new Claim[]
                     {
-                new Claim(ClaimTypes.Name, user.id.ToString()) // Используем id пользователя в качестве имени в токене
+            new Claim(ClaimTypes.Name, user.id.ToString()) // Используем email пользователя в качестве имени в токене
                     })
                 };
                 var token = tokenHandler.CreateToken(tokenDescriptor);
                 var tokenString = tokenHandler.WriteToken(token);
 
-                // Возвращение токена в качестве ответа
+                // Возвращаем токен в случае успеха
                 return Ok(new { token = tokenString });
             }
             catch (Exception ex)
             {
                 // Обработка ошибок, если возникла ошибка при добавлении пользователя
-                return StatusCode(500, "Произошла ошибка при добавлении пользователя.");
+                return StatusCode(500, new Response { message = ex.Message });
             }
         }
 
@@ -87,8 +88,10 @@ namespace Test.Controllers
         [ProducesResponseType(typeof(TokenResponse), 200)]
         [ProducesResponseType(typeof(void), 400)]
         [ProducesResponseType(typeof(Response), 500)]
-        public IActionResult login(LoginCredentials model)
+        public async Task<ActionResult> login(LoginCredentials model)
         {
+            try
+            {
             // Проверяем наличие пользователя с указанным email в базе данных
             var user = _context.Users.FirstOrDefault(u => u.email == model.email);
             if (user == null)
@@ -126,6 +129,12 @@ namespace Test.Controllers
 
             // Возвращаем токен в случае успеха
             return Ok(new { token = tokenString });
+            }
+            catch (Exception ex)
+            {
+                // Обработка ошибок, если возникла ошибка при входе пользователя
+                return StatusCode(500, new Response { message = ex.Message });
+            }
         }
 
         [HttpGet("profile")]
@@ -135,7 +144,8 @@ namespace Test.Controllers
         [ProducesResponseType(typeof(Response), 500)]
         public ActionResult<UserDto> GetProfile()
         {
-
+            try
+            {
             // Получаем значение заголовка "Authorization"
             string authorizationHeader = Request.Headers["Authorization"];
 
@@ -175,6 +185,11 @@ namespace Test.Controllers
 
             // Возвращаем данные профиля пользователя
             return Ok(userProfile);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new Response { message = ex.Message });
+            }
         }
 
         [HttpPut("profile")]
@@ -183,8 +198,10 @@ namespace Test.Controllers
         [ProducesResponseType(typeof(void), 400)]
         [ProducesResponseType(typeof(void), 401)]
         [ProducesResponseType(typeof(Response), 500)]
-        public async Task<IActionResult> UpdateProfile(UserEditModel updatedUserDto)
+        public async Task<ActionResult> UpdateProfile(UserEditModel updatedUserDto)
         {
+            try
+            {
             // Получаем идентификатор пользователя из токена
             // Получаем значение заголовка "Authorization"
             string authorizationHeader = Request.Headers["Authorization"];
@@ -222,14 +239,21 @@ namespace Test.Controllers
 
             // Возвращаем обновленные данные профиля пользователя
             return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new Response { message = ex.Message });
+            }
         }
 
         [HttpPost("logout")]
         [Authorize] // Требуется аутентификация
         [ProducesResponseType(typeof(void), 401)]
         [ProducesResponseType(typeof(Response), 500)]
-        public IActionResult Logout()
+        public async Task<ActionResult> Logout()
         {
+            try
+            {
             string authorizationHeader = Request.Headers["Authorization"];
             string bearerToken = authorizationHeader.Substring("Bearer ".Length);
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -240,6 +264,11 @@ namespace Test.Controllers
             //Логика удаления токена
 
             return StatusCode(200, new Response { status = null, message = "Logged Out" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new Response { message = ex.Message });
+            }
         }
 
     }

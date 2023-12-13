@@ -39,8 +39,10 @@ namespace Test.Controllers
         [ProducesResponseType(typeof(Response), 401)]
         [ProducesResponseType(typeof(Response), 404)]
         [ProducesResponseType(typeof(Response), 500)]
-        public IActionResult CreatePost(CreatePostDto postDto)
+        public async Task<ActionResult> CreatePost(CreatePostDto postDto)
         {
+            try
+            {
             // Получаем идентификатор авторизованного пользователя из токена
             string authorizationHeader = Request.Headers["Authorization"];
             string bearerToken = authorizationHeader.Substring("Bearer ".Length);
@@ -119,12 +121,17 @@ namespace Test.Controllers
                     tagId = tagId,
                 };
                 _context.PostTags.Add(tags_database);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
             }
 
 
             // Возвращаем созданный пост
             return Ok(post.id);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new Response { message = ex.Message });
+            }
         }
 
         [HttpGet("{id}")]
@@ -134,56 +141,63 @@ namespace Test.Controllers
         [ProducesResponseType(typeof(Response), 401)]
         [ProducesResponseType(typeof(Response), 404)]
         [ProducesResponseType(typeof(Response), 500)]
-        public IActionResult GetPostId(Guid id)
+        public async Task<ActionResult> GetPostId(Guid id)
         {
-            Guid userId = Guid.Empty;
-            if (User.Identity.IsAuthenticated)
+            try
             {
-                string authorizationHeader = Request.Headers["Authorization"];
-                string bearerToken = authorizationHeader.Substring("Bearer ".Length);
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
-                userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+                Guid userId = Guid.Empty;
+                if (User.Identity.IsAuthenticated)
+                {
+                    string authorizationHeader = Request.Headers["Authorization"];
+                    string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+                    var tokenHandler = new JwtSecurityTokenHandler();
+                    var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+                    userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+                }
+
+                var post = _context.Posts.SingleOrDefault(p => p.id == Guid.Parse(id.ToString()));
+                if (post == null)
+                {
+                    return StatusCode(404, new { status = "error", message = $"Post with id='{id}' not found in  database" });
+                }
+                //post.tags = _context.Tags.Where(t => t.PostDtoid == id).ToList();
+
+                var tagIds = _context.PostTags.Where(pt => pt.postId == post.id).Select(pt => pt.tagId).ToList();
+                var tags = _context.Tags.Where(t => tagIds.Contains(t.id)).ToList();
+                post.tags = tags;
+
+                var commentIds = _context.PostComment.Where(pt => pt.postId == post.id).Select(pt => pt.commentId).ToList();
+                var nestedCommentIds = _context.CommentComment.Select(cc => cc.commentId1).ToList();
+                var comments = _context.Comments
+                    .Where(c => commentIds.Contains(c.id))
+                    .Except(_context.Comments.Where(c => nestedCommentIds.Contains(c.id)))
+                    .ToList();
+
+                var postFull = new PostFullDto
+                {
+                    id = post.id,
+                    createTime = post.createTime,
+                    title = post.title,
+                    description = post.description,
+                    readingTime = post.readingTime,
+                    image = post.image,
+                    authorId = post.authorId,
+                    author = post.author,
+                    addressId = post.addressId,
+                    likes = post.likes,
+                    hasLike = post.hasLike,
+                    commentsCount = post.commentsCount,
+                    tags = post.tags,
+                    comments = comments,
+                };
+
+
+                return Ok(postFull);
             }
-
-            var post = _context.Posts.SingleOrDefault(p => p.id == Guid.Parse(id.ToString()));
-            if (post == null)
+            catch (Exception ex)
             {
-                return StatusCode(404, new { status = "error", message = $"Post with id='{id}' not found in  database" });
+                return StatusCode(500, new Response { message = ex.Message });
             }
-            //post.tags = _context.Tags.Where(t => t.PostDtoid == id).ToList();
-
-            var tagIds = _context.PostTags.Where(pt => pt.postId == post.id).Select(pt => pt.tagId).ToList();
-            var tags = _context.Tags.Where(t => tagIds.Contains(t.id)).ToList();
-            post.tags = tags;
-
-            var commentIds = _context.PostComment.Where(pt => pt.postId == post.id).Select(pt => pt.commentId).ToList();
-            var nestedCommentIds = _context.CommentComment.Select(cc => cc.commentId1).ToList();
-            var comments = _context.Comments
-                .Where(c => commentIds.Contains(c.id))
-                .Except(_context.Comments.Where(c => nestedCommentIds.Contains(c.id)))
-                .ToList();
-
-            var postFull = new PostFullDto
-            {
-                id = post.id,
-                createTime = post.createTime,
-                title = post.title,
-                description = post.description,
-                readingTime = post.readingTime,
-                image = post.image,
-                authorId = post.authorId,
-                author = post.author,
-                addressId = post.addressId,
-                likes = post.likes,
-                hasLike = post.hasLike,
-                commentsCount = post.commentsCount,
-                tags = post.tags,
-                comments = comments,
-            };
-
-
-            return Ok(postFull);
         }
 
 
@@ -194,99 +208,106 @@ namespace Test.Controllers
         [ProducesResponseType(typeof(void), 401)]
         [ProducesResponseType(typeof(void), 404)]
         [ProducesResponseType(typeof(Response), 500)]
-        public IActionResult GetPosts([FromQuery] string?[] tags, [FromQuery] string? author, int? min, int? max, PostSorting? sorting, [Range(1, int.MaxValue), DefaultValue(1)] int? page, [Range(1, int.MaxValue), DefaultValue(5)] int? size)
+        public async Task<ActionResult> GetPosts([FromQuery] string?[] tags, [FromQuery] string? author, int? min, int? max, PostSorting? sorting, [Range(1, int.MaxValue), DefaultValue(1)] int? page, [Range(1, int.MaxValue), DefaultValue(5)] int? size)
         {
-            Guid userId = Guid.Empty;
-            if (User.Identity.IsAuthenticated)
+            try
             {
-                string authorizationHeader = Request.Headers["Authorization"];
-                string bearerToken = authorizationHeader.Substring("Bearer ".Length);
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
-                userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
-            }
-            var posts = _context.Posts.AsQueryable();
-
-            if (!string.IsNullOrEmpty(author))
-            {
-                posts = posts.Where(p => p.author.Contains(author));
-            }
-
-            if (tags != null && tags.Length > 0)
-            {
-                var tagGuids = tags.Select(Guid.Parse).ToArray();
-                var postIdsWithTags = _context.PostTags.Where(pt => tagGuids.Contains(pt.tagId)).Select(pt => pt.postId).Distinct();
-                posts = posts.Where(p => postIdsWithTags.Contains(p.id));
-            }
-
-            if (min.HasValue)
-            {
-                posts = posts.Where(p => p.readingTime >= min.Value);
-            }
-
-            if (max.HasValue)
-            {
-                posts = posts.Where(p => p.readingTime <= max.Value);
-            }
-
-            var postList = posts.ToList();
-
-            for (int i = postList.Count - 1; i >= 0; i--)
-            {
-                var post = postList[i];
-                var tagIds = _context.PostTags.Where(pt => pt.postId == post.id).Select(pt => pt.tagId).ToList();
-                var tag = _context.Tags.Where(t => tagIds.Contains(t.id)).ToList();
-                post.tags = tag;
-
-                var community = _context.Communities.FirstOrDefault(c => c.id == post.communityId && c.isClosed);
-                if (community != null)
+                Guid userId = Guid.Empty;
+                if (User.Identity.IsAuthenticated)
                 {
-                    var userSubscribed = _context.CommunityUsers.Any(cu => cu.userId == userId && cu.communityId == post.communityId);
-                    if (!userSubscribed)
+                    string authorizationHeader = Request.Headers["Authorization"];
+                    string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+                    var tokenHandler = new JwtSecurityTokenHandler();
+                    var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+                    userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+                }
+                var posts = _context.Posts.AsQueryable();
+
+                if (!string.IsNullOrEmpty(author))
+                {
+                    posts = posts.Where(p => p.author.Contains(author));
+                }
+
+                if (tags != null && tags.Length > 0)
+                {
+                    var tagGuids = tags.Select(Guid.Parse).ToArray();
+                    var postIdsWithTags = _context.PostTags.Where(pt => tagGuids.Contains(pt.tagId)).Select(pt => pt.postId).Distinct();
+                    posts = posts.Where(p => postIdsWithTags.Contains(p.id));
+                }
+
+                if (min.HasValue)
+                {
+                    posts = posts.Where(p => p.readingTime >= min.Value);
+                }
+
+                if (max.HasValue)
+                {
+                    posts = posts.Where(p => p.readingTime <= max.Value);
+                }
+
+                var postList = posts.ToList();
+
+                for (int i = postList.Count - 1; i >= 0; i--)
+                {
+                    var post = postList[i];
+                    var tagIds = _context.PostTags.Where(pt => pt.postId == post.id).Select(pt => pt.tagId).ToList();
+                    var tag = _context.Tags.Where(t => tagIds.Contains(t.id)).ToList();
+                    post.tags = tag;
+
+                    var community = _context.Communities.FirstOrDefault(c => c.id == post.communityId && c.isClosed);
+                    if (community != null)
                     {
-                        postList.RemoveAt(i);
+                        var userSubscribed = _context.CommunityUsers.Any(cu => cu.userId == userId && cu.communityId == post.communityId);
+                        if (!userSubscribed)
+                        {
+                            postList.RemoveAt(i);
+                        }
                     }
                 }
-            }
 
-            if (sorting.HasValue)
-            {
-                switch (sorting.Value)
+                if (sorting.HasValue)
                 {
-                    case PostSorting.CreateDesc:
-                        postList = postList.OrderByDescending(p => p.createTime).ToList();
-                        break;
-                    case PostSorting.CreateAsc:
-                        postList = postList.OrderBy(p => p.createTime).ToList();
-                        break;
-                    case PostSorting.LikeAsc:
-                        postList = postList.OrderBy(p => p.likes).ToList();
-                        break;
-                    case PostSorting.LikeDesc:
-                        postList = postList.OrderByDescending(p => p.likes).ToList();
-                        break;
+                    switch (sorting.Value)
+                    {
+                        case PostSorting.CreateDesc:
+                            postList = postList.OrderByDescending(p => p.createTime).ToList();
+                            break;
+                        case PostSorting.CreateAsc:
+                            postList = postList.OrderBy(p => p.createTime).ToList();
+                            break;
+                        case PostSorting.LikeAsc:
+                            postList = postList.OrderBy(p => p.likes).ToList();
+                            break;
+                        case PostSorting.LikeDesc:
+                            postList = postList.OrderByDescending(p => p.likes).ToList();
+                            break;
+                    }
                 }
-            }
 
-            var totalCount = postList.Count();
+                var totalCount = postList.Count();
 
-            if (size.HasValue && page.HasValue)
-            {
-                postList = postList.Skip((page.Value - 1) * size.Value).Take(size.Value).ToList();
-            }
-
-            var result = new PostPagedListDto
-            {
-                posts = postList,
-                pagination = new PageInfoModel
+                if (size.HasValue && page.HasValue)
                 {
-                    size = size ?? 0,
-                    count = (int)Math.Ceiling((double)totalCount/size.Value),
-                    current = page ?? 0
+                    postList = postList.Skip((page.Value - 1) * size.Value).Take(size.Value).ToList();
                 }
-            };
 
-            return Ok(result);
+                var result = new PostPagedListDto
+                {
+                    posts = postList,
+                    pagination = new PageInfoModel
+                    {
+                        size = size ?? 0,
+                        count = (int)Math.Ceiling((double)totalCount / size.Value),
+                        current = page ?? 0
+                    }
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new Response { message = ex.Message });
+            }
         }
 
 
@@ -297,55 +318,64 @@ namespace Test.Controllers
         [ProducesResponseType(typeof(void), 401)]
         [ProducesResponseType(typeof(void), 404)]
         [ProducesResponseType(typeof(Response), 500)]
-        public IActionResult AddLikeToPost(Guid postId)
+        public async Task<ActionResult> AddLikeToPost(Guid postId)
         {
-            // Получаем текущего пользователя
-
-            string authorizationHeader = Request.Headers["Authorization"];
-            string bearerToken = authorizationHeader.Substring("Bearer ".Length);
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
-            Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
-
-            // Проверяем, существует ли пост с указанным идентификатором
-            var post = _context.Posts.FirstOrDefault(p => p.id == postId);
-            if (post == null)
+            try
             {
-                return StatusCode(404, new { status = "error", message = $"Post with id='{postId}' not found in  database" });
-            }
-
-            // Проверяем, был ли уже лайк от этого пользователя к этому посту
-            var existingLike = _context.PostLikes.FirstOrDefault(pl => pl.postId == postId && pl.userId == userId);
-            if (existingLike != null)
-            {
-                return StatusCode(400, new { status = "error", message = "You have already liked this post." });
-            }
 
 
-            var community = _context.Communities.FirstOrDefault(c => c.id == post.communityId);
-            if (community != null && community.isClosed)
-            {
-                var userSubscribed = _context.CommunityUsers.Any(c => c.userId == userId && c.communityId == post.communityId);
-                if (!userSubscribed)
+                // Получаем текущего пользователя
+
+                string authorizationHeader = Request.Headers["Authorization"];
+                string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+                Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+
+                // Проверяем, существует ли пост с указанным идентификатором
+                var post = _context.Posts.FirstOrDefault(p => p.id == postId);
+                if (post == null)
                 {
-                    return StatusCode(403, new { status = "error", message = "Community is closed" });
+                    return StatusCode(404, new { status = "error", message = $"Post with id='{postId}' not found in  database" });
                 }
+
+                // Проверяем, был ли уже лайк от этого пользователя к этому посту
+                var existingLike = _context.PostLikes.FirstOrDefault(pl => pl.postId == postId && pl.userId == userId);
+                if (existingLike != null)
+                {
+                    return StatusCode(400, new { status = "error", message = "You have already liked this post." });
+                }
+
+
+                var community = _context.Communities.FirstOrDefault(c => c.id == post.communityId);
+                if (community != null && community.isClosed)
+                {
+                    var userSubscribed = _context.CommunityUsers.Any(c => c.userId == userId && c.communityId == post.communityId);
+                    if (!userSubscribed)
+                    {
+                        return StatusCode(403, new { status = "error", message = "Community is closed" });
+                    }
+                }
+
+
+                // Добавляем лайк к посту
+                post.likes++;
+
+                var like = new PostLiked
+                {
+                    postId = post.id,
+                    userId = userId,
+                };
+                _context.PostLikes.Add(like);
+
+                await _context.SaveChangesAsync();
+
+                return Ok();
             }
-
-
-            // Добавляем лайк к посту
-            post.likes++;
-
-            var like = new PostLiked
+            catch (Exception ex)
             {
-                postId = post.id,
-                userId = userId,
-            };
-            _context.PostLikes.Add(like);
-
-            _context.SaveChanges();
-
-            return Ok();
+                return StatusCode(500, new Response { message = ex.Message });
+            }
         }
 
         [HttpDelete("{postId}/like")]
@@ -355,36 +385,42 @@ namespace Test.Controllers
         [ProducesResponseType(typeof(void), 401)]
         [ProducesResponseType(typeof(void), 404)]
         [ProducesResponseType(typeof(Response), 500)]
-        public IActionResult DeleteLikeToPost(Guid postId)
+        public async Task<ActionResult> DeleteLikeToPost(Guid postId)
         {
-
-            string authorizationHeader = Request.Headers["Authorization"];
-            string bearerToken = authorizationHeader.Substring("Bearer ".Length);
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
-            Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
-
-            // Проверяем, существует ли пост с указанным идентификатором
-            var post = _context.Posts.FirstOrDefault(p => p.id == postId);
-            if (post == null)
+            try
             {
-                return StatusCode(404, new { status = "error", message = $"Post with id='{postId}' not found in  database" });
-            }
+                string authorizationHeader = Request.Headers["Authorization"];
+                string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+                Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
 
-            // Проверяем, был ли уже лайк от этого пользователя к этому посту
-            var existingLike = _context.PostLikes.FirstOrDefault(pl => pl.postId == postId && pl.userId == userId);
-            if (existingLike == null)
+                // Проверяем, существует ли пост с указанным идентификатором
+                var post = _context.Posts.FirstOrDefault(p => p.id == postId);
+                if (post == null)
+                {
+                    return StatusCode(404, new { status = "error", message = $"Post with id='{postId}' not found in  database" });
+                }
+
+                // Проверяем, был ли уже лайк от этого пользователя к этому посту
+                var existingLike = _context.PostLikes.FirstOrDefault(pl => pl.postId == postId && pl.userId == userId);
+                if (existingLike == null)
+                {
+                    return StatusCode(400, new { status = "error", message = "You havn't liked this post yet." });
+                }
+
+                post.likes--;
+
+                _context.PostLikes.Remove(existingLike);
+
+                await _context.SaveChangesAsync();
+
+                return Ok();
+            }
+            catch (Exception ex)
             {
-                return StatusCode(400, new { status = "error", message = "You havn't liked this post yet." });
+                return StatusCode(500, new Response { message = ex.Message });
             }
-
-            post.likes--;
-
-            _context.PostLikes.Remove(existingLike);
-
-            _context.SaveChanges();
-
-            return Ok();
         }
 
     }

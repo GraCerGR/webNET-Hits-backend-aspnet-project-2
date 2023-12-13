@@ -5,8 +5,9 @@
     "\\Test\\Test",
     "\\Test\\Test\\Controllers",
     "\\Test\\Test\\Models",
-    "\\Test\\Test\\Models\\DTO"
+    "\\Test\\Test\\Models\\DTO",
+    "\\Test\\Test\\Services"
   ],
-  "SelectedNode": "\\Test\\Test.sln",
+  "SelectedNode": "\\Test\\Test\\Services\\IUserDtoService.cs",
   "PreviewInSolutionExplorer": false
 }

@@ -28,7 +28,7 @@ namespace Test.Controllers
         [HttpGet("tag")]
         [ProducesResponseType(typeof(TagDto), 200)]
         [ProducesResponseType(typeof(Response), 500)]
-        public IActionResult GetTags()
+        public async Task<ActionResult> GetTags()
         {
             try
             {
