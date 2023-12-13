@@ -211,6 +211,7 @@ namespace Test.Controllers
                     commentsCount = 0,
                 };
 
+                user.posts++;
                 // Добавляем пост в контекст базы данных
                 _context.Posts.Add(post);
                 await _context.SaveChangesAsync();

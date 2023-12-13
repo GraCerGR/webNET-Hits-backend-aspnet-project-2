@@ -118,6 +118,7 @@ namespace Test.Controllers
 
                 // Добавляем пост в контекст базы данных
                 _context.Posts.Add(post);
+                user.posts++;
 
                 foreach (Guid tagId in tagIds1)
                 {
@@ -127,8 +128,9 @@ namespace Test.Controllers
                         tagId = tagId,
                     };
                     _context.PostTags.Add(tags_database);
-                    await _context.SaveChangesAsync();
                 }
+
+                await _context.SaveChangesAsync();
 
 
                 // Возвращаем созданный пост
@@ -209,6 +211,8 @@ namespace Test.Controllers
                     authorId = post.authorId,
                     author = post.author,
                     addressId = post.addressId,
+                    communityId = post.communityId,
+                    communityName = post.communityName,
                     likes = post.likes,
                     hasLike = post.hasLike,
                     commentsCount = post.commentsCount,
@@ -359,6 +363,7 @@ namespace Test.Controllers
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
                 Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+                var user = _context.Users.FirstOrDefault(u => u.id == userId);
 
                 var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
                 if (logoutToken != null)
@@ -394,6 +399,7 @@ namespace Test.Controllers
 
                 // Добавляем лайк к посту
                 post.likes++;
+                user.likes++;
 
                 var like = new PostLiked
                 {
@@ -428,6 +434,7 @@ namespace Test.Controllers
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
                 Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+                var user = _context.Users.FirstOrDefault(u => u.id == userId);
 
                 var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
                 if (logoutToken != null)
@@ -449,7 +456,18 @@ namespace Test.Controllers
                     return StatusCode(400, new { status = "error", message = "You havn't liked this post yet." });
                 }
 
+                var community = _context.Communities.FirstOrDefault(c => c.id == post.communityId);
+                if (community != null && community.isClosed)
+                {
+                    var userSubscribed = _context.CommunityUsers.Any(c => c.userId == userId && c.communityId == post.communityId);
+                    if (!userSubscribed)
+                    {
+                        return StatusCode(403, new { status = "error", message = "Community is closed" });
+                    }
+                }
+
                 post.likes--;
+                user.likes--;
 
                 _context.PostLikes.Remove(existingLike);
 
