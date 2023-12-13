@@ -31,6 +31,40 @@ namespace Test.Controllers
         {
             try
             {
+                Guid userId = Guid.Empty;
+                if (User.Identity.IsAuthenticated)
+                {
+                    string authorizationHeader = Request.Headers["Authorization"];
+                    string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+                    var tokenHandler = new JwtSecurityTokenHandler();
+                    var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+                    userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+
+                    var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
+                    if (logoutToken != null)
+                    {
+                        return StatusCode(401, new { status = "error", message = "Недействительный токен" });
+                    }
+                }
+
+                var postComment = _context.PostComment.FirstOrDefault(pc => pc.commentId == id);
+
+                var post = _context.Posts.FirstOrDefault(p => p.id == postComment.postId);
+
+                var community = _context.Communities.FirstOrDefault(c => c.id == post.communityId);
+
+                if (community != null)
+                {
+                    if (community.isClosed)
+                    {
+                        var communityUser = _context.CommunityUsers.FirstOrDefault(cu => cu.communityId == community.id && cu.userId == userId);
+                        if (communityUser == null)
+                        {
+                            return StatusCode(403, new { status = "error", message = "User is not subscribed to the community" });
+                        }
+                    }
+                }
+
 
                 var parentComment = _context.Comments.FirstOrDefault(c => c.id == id);
                 if (parentComment == null)
@@ -67,6 +101,12 @@ namespace Test.Controllers
                 var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
                 Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
                 var user = _context.Users.FirstOrDefault(u => u.id == userId);
+
+                var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
+                if (logoutToken != null)
+                {
+                    return StatusCode(401, new { status = "error", message = "Недействительный токен" });
+                }
 
                 if (user == null)
                 {
@@ -145,6 +185,12 @@ namespace Test.Controllers
                 Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
                 var user = _context.Users.FirstOrDefault(u => u.id == userId);
 
+                var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
+                if (logoutToken != null)
+                {
+                    return StatusCode(401, new { status = "error", message = "Недействительный токен" });
+                }
+
                 if (user == null)
                 {
                     return StatusCode(404, new { status = "error", message = "User not found" });
@@ -193,6 +239,12 @@ namespace Test.Controllers
                 var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
                 Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
                 var user = _context.Users.FirstOrDefault(u => u.id == userId);
+
+                var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
+                if (logoutToken != null)
+                {
+                    return StatusCode(401, new { status = "error", message = "Недействительный токен" });
+                }
 
                 if (user == null)
                 {

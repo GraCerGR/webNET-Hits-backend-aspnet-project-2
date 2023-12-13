@@ -92,43 +92,43 @@ namespace Test.Controllers
         {
             try
             {
-            // Проверяем наличие пользователя с указанным email в базе данных
-            var user = _context.Users.FirstOrDefault(u => u.email == model.email);
-            if (user == null)
-            {
-                // Если пользователя с указанным email не существует, возвращаем ошибку
-                return StatusCode(400, new { status = "error", message = "Неверный email или пароль." });
-            }
-
-            // Проверяем правильность введенного пароля
-            if (user.password != model.password)
-            {
-                // Если пароль неверный, возвращаем ошибку
-                return StatusCode(400, new { status = "error", message = "Неверный email или пароль." });
-            }
-
-            //var userDto = _context.Users.FirstOrDefault(u => u.email == user.email);
-
-            // Генерируем токен для пользователя
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes("1234567890123456789012345678901234567890");
-            var tokenDescriptor = new SecurityTokenDescriptor()
-            {
-                NotBefore = DateTime.UtcNow,
-                Expires = DateTime.UtcNow.AddHours(1),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
-                Issuer = "HITS",
-                Audience = "HITS",
-                Subject = new ClaimsIdentity(new Claim[]
+                // Проверяем наличие пользователя с указанным email в базе данных
+                var user = _context.Users.FirstOrDefault(u => u.email == model.email);
+                if (user == null)
                 {
-            new Claim(ClaimTypes.Name, user.id.ToString()) // Используем email пользователя в качестве имени в токене
-                })
-            };
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            var tokenString = tokenHandler.WriteToken(token);
+                    // Если пользователя с указанным email не существует, возвращаем ошибку
+                    return StatusCode(400, new { status = "error", message = "Неверный email или пароль." });
+                }
 
-            // Возвращаем токен в случае успеха
-            return Ok(new { token = tokenString });
+                // Проверяем правильность введенного пароля
+                if (user.password != model.password)
+                {
+                    // Если пароль неверный, возвращаем ошибку
+                    return StatusCode(400, new { status = "error", message = "Неверный email или пароль." });
+                }
+
+                //var userDto = _context.Users.FirstOrDefault(u => u.email == user.email);
+
+                // Генерируем токен для пользователя
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.UTF8.GetBytes("1234567890123456789012345678901234567890");
+                var tokenDescriptor = new SecurityTokenDescriptor()
+                {
+                    NotBefore = DateTime.UtcNow,
+                    Expires = DateTime.UtcNow.AddHours(1),
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+                    Issuer = "HITS",
+                    Audience = "HITS",
+                    Subject = new ClaimsIdentity(new Claim[]
+                    {
+            new Claim(ClaimTypes.Name, user.id.ToString()) // Используем email пользователя в качестве имени в токене
+                    })
+                };
+                var token = tokenHandler.CreateToken(tokenDescriptor);
+                var tokenString = tokenHandler.WriteToken(token);
+
+                // Возвращаем токен в случае успеха
+                return Ok(new { token = tokenString });
             }
             catch (Exception ex)
             {
@@ -139,52 +139,57 @@ namespace Test.Controllers
 
         [HttpGet("profile")]
         [Authorize] // Требуется аутентификация
-        [ProducesResponseType(typeof(UserDto),200)]
+        [ProducesResponseType(typeof(UserDto), 200)]
         [ProducesResponseType(typeof(void), 401)]
         [ProducesResponseType(typeof(Response), 500)]
         public ActionResult<UserDto> GetProfile()
         {
             try
             {
-            // Получаем значение заголовка "Authorization"
-            string authorizationHeader = Request.Headers["Authorization"];
+                // Получаем значение заголовка "Authorization"
+                string authorizationHeader = Request.Headers["Authorization"];
 
-            // Извлекаем токен Bearer из значения заголовка
-            string bearerToken = authorizationHeader.Substring("Bearer ".Length);
-
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-
-            // Расшифровываем и проверяем токен
-            var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
-
-            // Извлекаем идентификатор пользователя из полезной нагрузки токена
-            string userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
-
-            // Ищем пользователя в базе данных по идентификатору
-            var user = _context.Users.FirstOrDefault(u => u.id.ToString() == userId);
+                // Извлекаем токен Bearer из значения заголовка
+                string bearerToken = authorizationHeader.Substring("Bearer ".Length);
 
 
-            if (user == null)
-            {
-                // Если пользователь не найден, возвращаем ошибку
-                return NotFound();
-            }
+                var tokenHandler = new JwtSecurityTokenHandler();
 
-            // Создаем объект UserDto с данными профиля пользователя
-            var userProfile = new UserDto
-            {
-                fullName = user.fullName,
-                birthDate = user.birthDate,
-                gender = user.gender,
-                email = user.email,
-                phoneNumber = user.phoneNumber,
-                id = user.id,
-                createTime = user.createTime
-            };
+                // Расшифровываем и проверяем токен
+                var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
 
-            // Возвращаем данные профиля пользователя
-            return Ok(userProfile);
+                // Извлекаем идентификатор пользователя из полезной нагрузки токена
+                string userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
+
+                // Ищем пользователя в базе данных по идентификатору
+                var user = _context.Users.FirstOrDefault(u => u.id.ToString() == userId);
+
+                var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
+                if (logoutToken != null)
+                {
+                    return StatusCode(401, new { status = "error", message = "Недействительный токен" });
+                }
+
+                if (user == null)
+                {
+                    // Если пользователь не найден, возвращаем ошибку
+                    return NotFound();
+                }
+
+                // Создаем объект UserDto с данными профиля пользователя
+                var userProfile = new UserDto
+                {
+                    fullName = user.fullName,
+                    birthDate = user.birthDate,
+                    gender = user.gender,
+                    email = user.email,
+                    phoneNumber = user.phoneNumber,
+                    id = user.id,
+                    createTime = user.createTime
+                };
+
+                // Возвращаем данные профиля пользователя
+                return Ok(userProfile);
             }
             catch (Exception ex)
             {
@@ -202,43 +207,49 @@ namespace Test.Controllers
         {
             try
             {
-            // Получаем идентификатор пользователя из токена
-            // Получаем значение заголовка "Authorization"
-            string authorizationHeader = Request.Headers["Authorization"];
+                // Получаем идентификатор пользователя из токена
+                // Получаем значение заголовка "Authorization"
+                string authorizationHeader = Request.Headers["Authorization"];
 
-            // Извлекаем токен Bearer из значения заголовка
-            string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+                // Извлекаем токен Bearer из значения заголовка
+                string bearerToken = authorizationHeader.Substring("Bearer ".Length);
 
 
-            var tokenHandler = new JwtSecurityTokenHandler();
+                var tokenHandler = new JwtSecurityTokenHandler();
 
-            // Расшифровываем и проверяем токен
-            var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+                // Расшифровываем и проверяем токен
+                var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
 
-            // Извлекаем идентификатор пользователя из полезной нагрузки токена
-            string userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
+                // Извлекаем идентификатор пользователя из полезной нагрузки токена
+                string userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
 
-            // Ищем пользователя в базе данных по идентификатору
-            var user = _context.Users.FirstOrDefault(u => u.id.ToString() == userId);
+                // Ищем пользователя в базе данных по идентификатору
+                var user = _context.Users.FirstOrDefault(u => u.id.ToString() == userId);
 
-            if (user == null)
-            {
-                // Если пользователь не найден, возвращаем ошибку
-                return NotFound();
-            }
+                var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
+                if (logoutToken != null)
+                {
+                    return StatusCode(401, new { status = "error", message = "Недействительный токен" });
+                }
 
-            // Обновляем данные пользователя на основе полученного объекта UserDto
-            user.email = updatedUserDto.email;
-            user.fullName = updatedUserDto.fullName;
-            user.birthDate = updatedUserDto.birthDate;
-            user.gender = updatedUserDto.gender;
-            user.phoneNumber = updatedUserDto.phoneNumber;
+                if (user == null)
+                {
+                    // Если пользователь не найден, возвращаем ошибку
+                    return NotFound();
+                }
 
-            // Сохраняем изменения в базе данных
-            await _context.SaveChangesAsync();
+                // Обновляем данные пользователя на основе полученного объекта UserDto
+                user.email = updatedUserDto.email;
+                user.fullName = updatedUserDto.fullName;
+                user.birthDate = updatedUserDto.birthDate;
+                user.gender = updatedUserDto.gender;
+                user.phoneNumber = updatedUserDto.phoneNumber;
 
-            // Возвращаем обновленные данные профиля пользователя
-            return Ok();
+                // Сохраняем изменения в базе данных
+                await _context.SaveChangesAsync();
+
+                // Возвращаем обновленные данные профиля пользователя
+                return Ok();
             }
             catch (Exception ex)
             {
@@ -254,16 +265,28 @@ namespace Test.Controllers
         {
             try
             {
-            string authorizationHeader = Request.Headers["Authorization"];
-            string bearerToken = authorizationHeader.Substring("Bearer ".Length);
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
-            string userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
-            var user = _context.Users.FirstOrDefault(u => u.id.ToString() == userId);
+                string authorizationHeader = Request.Headers["Authorization"];
+                string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+                string userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
+                var user = _context.Users.FirstOrDefault(u => u.id.ToString() == userId);
 
-            //Логика удаления токена
 
-            return StatusCode(200, new Response { status = null, message = "Logged Out" });
+                var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
+                if (logoutToken != null)
+                {
+                    return StatusCode(401, new { status = "error", message = "Недействительный токен" });
+                }
+
+                var logoutTokenNew = new TokenResponse
+                {
+                    token = bearerToken,
+                };
+                _context.LogoutTokens.Add(logoutTokenNew);
+                await _context.SaveChangesAsync();
+
+                return StatusCode(200, new Response { status = null, message = "Logged Out" });
             }
             catch (Exception ex)
             {
