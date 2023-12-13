@@ -80,9 +80,9 @@ builder.Services.AddAuthentication(options =>
 var app = builder.Build();
 
 //DB init and uodate:
-using var serviseScope = app.Services.CreateScope();
+/*using var serviseScope = app.Services.CreateScope();
 var dbContext = serviseScope.ServiceProvider.GetService<TestContext>();
-dbContext?.Database.Migrate(); //Migration
+dbContext?.Database.Migrate(); //Migration*/
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
