@@ -31,6 +31,8 @@ namespace Test.Models
 
         public DbSet<PostComment> PostComment { get; set; }
 
+        public DbSet<TokenResponse> LogoutTokens { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>().HasKey(x => x.id);
@@ -53,6 +55,8 @@ namespace Test.Models
 
             modelBuilder.Entity<PostComment>().HasKey(x => new { x.postId, x.commentId });
 
+            modelBuilder.Entity<TokenResponse>().HasKey(x => new { x.token });
+
 
             modelBuilder.Entity<User>(options => { });
 
@@ -73,6 +77,8 @@ namespace Test.Models
             modelBuilder.Entity<CommentComment>(options => { });
 
             modelBuilder.Entity<PostComment>(options => { });
+
+            modelBuilder.Entity<TokenResponse>(options => { });
 
 
             base.OnModelCreating(modelBuilder);

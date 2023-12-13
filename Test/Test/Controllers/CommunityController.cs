@@ -67,6 +67,12 @@ namespace Test.Controllers
                 Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
                 var user = _context.Users.FirstOrDefault(u => u.id == userId);
 
+                var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
+                if (logoutToken != null)
+                {
+                    return StatusCode(401, new { status = "error", message = "Недействительный токен" });
+                }
+
                 if (user == null)
                 {
                     return StatusCode(404, new { status = "error", message = "User not found" });
@@ -139,6 +145,12 @@ namespace Test.Controllers
                 var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
                 Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
                 var user = _context.Users.FirstOrDefault(u => u.id == userId);
+
+                var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
+                if (logoutToken != null)
+                {
+                    return StatusCode(401, new { status = "error", message = "Недействительный токен" });
+                }
 
                 if (user == null)
                 {
@@ -240,6 +252,12 @@ namespace Test.Controllers
                 Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
                 var user = _context.Users.FirstOrDefault(u => u.id == userId);
 
+                var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
+                if (logoutToken != null)
+                {
+                    return StatusCode(401, new { status = "error", message = "Недействительный токен" });
+                }
+
                 if (user == null)
                 {
                     return StatusCode(404, new { status = "error", message = "User not found" });
@@ -282,6 +300,12 @@ namespace Test.Controllers
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
                 Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+
+                var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
+                if (logoutToken != null)
+                {
+                    return StatusCode(401, new { status = "error", message = "Недействительный токен" });
+                }
 
                 var community = _context.Communities.FirstOrDefault(p => p.id == id);
                 if (community == null)
@@ -333,6 +357,12 @@ namespace Test.Controllers
                 var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
                 Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
 
+                var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
+                if (logoutToken != null)
+                {
+                    return StatusCode(401, new { status = "error", message = "Недействительный токен" });
+                }
+
                 var community = _context.Communities.FirstOrDefault(p => p.id == id);
                 if (community == null)
                 {
@@ -379,6 +409,12 @@ namespace Test.Controllers
                     var tokenHandler = new JwtSecurityTokenHandler();
                     var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
                     userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+
+                    var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
+                    if (logoutToken != null)
+                    {
+                        return StatusCode(401, new { status = "error", message = "Недействительный токен" });
+                    }
                 }
 
                 var community = _context.Communities.FirstOrDefault(p => p.id == id);

@@ -43,90 +43,96 @@ namespace Test.Controllers
         {
             try
             {
-            // Получаем идентификатор авторизованного пользователя из токена
-            string authorizationHeader = Request.Headers["Authorization"];
-            string bearerToken = authorizationHeader.Substring("Bearer ".Length);
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
-            Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
-            var user = _context.Users.FirstOrDefault(u => u.id == userId);
+                // Получаем идентификатор авторизованного пользователя из токена
+                string authorizationHeader = Request.Headers["Authorization"];
+                string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+                Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+                var user = _context.Users.FirstOrDefault(u => u.id == userId);
 
-            var tagIds = postDto.tags; // Получение массива id тегов из postDto 
-            var tags = new List<TagDto>(); // Создание списка для хранения объектов тегов 
-            foreach (var tagId in tagIds)
-            {
-                var existingTag = _context.Tags.FirstOrDefault(t => t.id == Guid.Parse(tagId)); // Поиск существующего тега по id 
-                if (existingTag != null)
+                var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
+                if (logoutToken != null)
                 {
-                    tags.Add(existingTag); // Использование существующего тега 
+                    return StatusCode(401, new { status = "error", message = "Недействительный токен" });
                 }
-                else
+
+                var tagIds = postDto.tags; // Получение массива id тегов из postDto 
+                var tags = new List<TagDto>(); // Создание списка для хранения объектов тегов 
+                foreach (var tagId in tagIds)
                 {
-                    ModelState.AddModelError("$.tags[0]", $"The tag with id '{tagId}' was not found.");
+                    var existingTag = _context.Tags.FirstOrDefault(t => t.id == Guid.Parse(tagId)); // Поиск существующего тега по id 
+                    if (existingTag != null)
+                    {
+                        tags.Add(existingTag); // Использование существующего тега 
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("$.tags[0]", $"The tag with id '{tagId}' was not found.");
+                    }
                 }
-            }
 
-            List<Guid> tagIds1 = new List<Guid>();
-            foreach (TagDto tag in tags)
-            {
-                tagIds1.Add(tag.id);
-            }
-
-            if (!ModelState.IsValid)
-            {
-                // Возвращаем ответ с ошибкой валидации модели
-                var validationErrors = ModelState.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
-                );
-
-                var response = new
+                List<Guid> tagIds1 = new List<Guid>();
+                foreach (TagDto tag in tags)
                 {
-                    type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-                    title = "One or more validation errors occurred.",
-                    status = 400,
-                    traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
-                    errors = validationErrors
+                    tagIds1.Add(tag.id);
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    // Возвращаем ответ с ошибкой валидации модели
+                    var validationErrors = ModelState.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    );
+
+                    var response = new
+                    {
+                        type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                        title = "One or more validation errors occurred.",
+                        status = 400,
+                        traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
+                        errors = validationErrors
+                    };
+
+                    return BadRequest(response);
+                }
+
+                // Создаем новый объект поста на основе данных из запроса
+                var post = new PostDto
+                {
+                    id = Guid.NewGuid(),
+                    createTime = DateTime.Now.ToString(),
+                    title = postDto.title,
+                    description = postDto.description,
+                    readingTime = postDto.readingTime,
+                    image = postDto.image,
+                    authorId = userId,
+                    author = user.fullName,
+                    addressId = postDto.addressId,
+                    likes = 0,
+                    hasLike = false,
+                    commentsCount = 0,
+                    //tags = tags,
                 };
 
-                return BadRequest(response);
-            }
+                // Добавляем пост в контекст базы данных
+                _context.Posts.Add(post);
 
-            // Создаем новый объект поста на основе данных из запроса
-            var post = new PostDto
-            {
-                id = Guid.NewGuid(),
-                createTime = DateTime.Now.ToString(),
-                title = postDto.title,
-                description = postDto.description,
-                readingTime = postDto.readingTime,
-                image = postDto.image,
-                authorId = userId,
-                author = user.fullName,
-                addressId = postDto.addressId,
-                likes = 0,
-                hasLike = false,
-                commentsCount = 0,
-                //tags = tags,
-            };
-
-            // Добавляем пост в контекст базы данных
-            _context.Posts.Add(post);
-
-            foreach (Guid tagId in tagIds1)
-            {
-                var tags_database = new PostTag
+                foreach (Guid tagId in tagIds1)
                 {
-                    postId = post.id,
-                    tagId = tagId,
-                };
-                _context.PostTags.Add(tags_database);
-                await _context.SaveChangesAsync();
-            }
+                    var tags_database = new PostTag
+                    {
+                        postId = post.id,
+                        tagId = tagId,
+                    };
+                    _context.PostTags.Add(tags_database);
+                    await _context.SaveChangesAsync();
+                }
 
 
-            // Возвращаем созданный пост
-            return Ok(post.id);
+                // Возвращаем созданный пост
+                return Ok(post.id);
             }
             catch (Exception ex)
             {
@@ -153,7 +159,14 @@ namespace Test.Controllers
                     var tokenHandler = new JwtSecurityTokenHandler();
                     var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
                     userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+
+                    var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
+                    if (logoutToken != null)
+                    {
+                        return StatusCode(401, new { status = "error", message = "Недействительный токен" });
+                    }
                 }
+
 
                 var post = _context.Posts.SingleOrDefault(p => p.id == Guid.Parse(id.ToString()));
                 if (post == null)
@@ -161,6 +174,18 @@ namespace Test.Controllers
                     return StatusCode(404, new { status = "error", message = $"Post with id='{id}' not found in  database" });
                 }
                 //post.tags = _context.Tags.Where(t => t.PostDtoid == id).ToList();
+
+
+                var community = _context.Communities.FirstOrDefault(c => c.id == post.communityId);
+                if (community != null && community.isClosed)
+                {
+                    var userSubscribed = _context.CommunityUsers.Any(c => c.userId == userId && c.communityId == post.communityId);
+                    if (!userSubscribed)
+                    {
+                        return StatusCode(403, new { status = "error", message = "Community is closed" });
+                    }
+                }
+
 
                 var tagIds = _context.PostTags.Where(pt => pt.postId == post.id).Select(pt => pt.tagId).ToList();
                 var tags = _context.Tags.Where(t => tagIds.Contains(t.id)).ToList();
@@ -220,6 +245,12 @@ namespace Test.Controllers
                     var tokenHandler = new JwtSecurityTokenHandler();
                     var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
                     userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+
+                    var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
+                    if (logoutToken != null)
+                    {
+                        return StatusCode(401, new { status = "error", message = "Недействительный токен" });
+                    }
                 }
                 var posts = _context.Posts.AsQueryable();
 
@@ -323,14 +354,17 @@ namespace Test.Controllers
             try
             {
 
-
-                // Получаем текущего пользователя
-
                 string authorizationHeader = Request.Headers["Authorization"];
                 string bearerToken = authorizationHeader.Substring("Bearer ".Length);
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
                 Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+
+                var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
+                if (logoutToken != null)
+                {
+                    return StatusCode(401, new { status = "error", message = "Недействительный токен" });
+                }
 
                 // Проверяем, существует ли пост с указанным идентификатором
                 var post = _context.Posts.FirstOrDefault(p => p.id == postId);
@@ -394,6 +428,12 @@ namespace Test.Controllers
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
                 Guid userId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
+
+                var logoutToken = _context.LogoutTokens.FirstOrDefault(t => t.token == bearerToken);
+                if (logoutToken != null)
+                {
+                    return StatusCode(401, new { status = "error", message = "Недействительный токен" });
+                }
 
                 // Проверяем, существует ли пост с указанным идентификатором
                 var post = _context.Posts.FirstOrDefault(p => p.id == postId);
