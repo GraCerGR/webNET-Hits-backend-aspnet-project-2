@@ -20,8 +20,10 @@ namespace Test.Controllers
         [HttpGet("list")]
         [ProducesResponseType(typeof(AuthorDto), 200)]
         [ProducesResponseType(typeof(Response), 500)]
-        public IActionResult GetAuthors()
+        public async Task<ActionResult> GetAuthors()
         {
+            try
+            {
             var users = _context.Users.ToList();
             var authors = users.Select(user => new AuthorDto
             {
@@ -34,6 +36,11 @@ namespace Test.Controllers
             }).ToList();
 
             return Ok(authors);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new Response { message = ex.Message });
+            }
         }
     }
 }
